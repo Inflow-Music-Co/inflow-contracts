@@ -1,0 +1,15 @@
+#folders
+node_modules
+dist
+build
+
+#files
+**.env
+
+#yarn 
+.yarn/*
+!.yarn/releases
+!.yarn/plugins
+!.yarn/sdks
+!.yarn/versions
+.pnp.*

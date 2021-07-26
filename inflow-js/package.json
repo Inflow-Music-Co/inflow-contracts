@@ -1,0 +1,15 @@
+{
+  "name": "inflow-js",
+  "version": "0.1.0",
+  "author": "David Josephs",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^15.12.2",
+    "ts-node": "^10.0.0",
+    "typescript": "^4.3.2"
+  },
+  "dependencies": {
+    "ethers": "^5.3.1",
+    "nft.storage": "^2.1.1"
+  }
+}
