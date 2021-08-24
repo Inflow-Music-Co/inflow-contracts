@@ -181,6 +181,23 @@ describe("SocialToken Tests", () => {
     }
   });
 
+  it("withdraws creator fee to owner", async () => {
+    const initClaimAmount = await social.claimAmount();
+    await (await social.claimCreatorFee(social.address, 10)).wait();
+    await (await social.claimCreatorFee(social.address, 20)).wait();
+    const currentClaimAmount = await social.claimAmount();
+    expect(initClaimAmount.sub(currentClaimAmount)).to.equal(30);
+  });
+
+  it("withdraws creator fee to approved wallet address", async () => {
+    await (await social.claimCreatorFee(accounts[2], 25)).wait();
+    expect(await usdc.balanceOf(accounts[2])).to.equal(25);
+  });
+
+  it("withdraw creator fee tx reverts if msg.sender is not owner of social token", async () => {
+    await expect(social.connect(signers[2]).claimCreatorFee(accounts[2], 20)).to.be.reverted;
+  });
+
   it("getMintPrice uses simple integral calculation if supply is 0", async () => {
     try {
       const supply = await social.totalSupply();

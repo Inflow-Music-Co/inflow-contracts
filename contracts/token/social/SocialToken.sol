@@ -25,6 +25,8 @@ contract SocialToken is ISocialToken, Ownable, ERC20, ReentrancyGuard {
   uint256 public maxSupply;
   /// @dev Funds reserved for burns
   uint256 public reserve;
+  // /// @dev CreatorFee balance that is stored in this contract itself
+  uint256 public claimAmount;
 
   constructor(CreateData memory data) ERC20(data.name, data.symbol) {
     creator = data.creator;
@@ -51,7 +53,7 @@ contract SocialToken is ISocialToken, Ownable, ERC20, ReentrancyGuard {
     _mint(msg.sender, amount);
     IERC20 _collateral = collateral;
     _collateral.safeTransferFrom(msg.sender, address(this), mintPrice);
-    _collateral.safeTransfer(creator, creatorFee);
+    claimAmount += creatorFee;
     emit Minted(
       msg.sender,
       amount,
@@ -85,6 +87,18 @@ contract SocialToken is ISocialToken, Ownable, ERC20, ReentrancyGuard {
     IERC20 _collateral = collateral;
     uint256 withdrawableFunds = _collateral.balanceOf(address(this)) - reserve;
     _collateral.safeTransfer(msg.sender, withdrawableFunds);
+  }
+
+  /// @dev Withdraw creator Fee from the contract
+  /// @param walletAddress (address): Address of wallet to transfer
+  /// @param amount (uint256): Amount to transfer
+  function claimCreatorFee(address walletAddress, uint256 amount) external nonReentrant {
+    require(msg.sender == creator, "SocialToken: Not owner of social token");
+    require(walletAddress != address(0), "SocialToken: invalid wallet address");
+    require(amount <= claimAmount, "SocialToken: transfer amount greater than balance");
+    IERC20 _collateral = collateral;
+    claimAmount -= amount;
+    _collateral.safeTransfer(walletAddress, amount);
   }
 
   //////////////////////////////
