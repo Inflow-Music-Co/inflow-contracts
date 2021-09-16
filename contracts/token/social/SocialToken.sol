@@ -7,8 +7,9 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../../interfaces/ISocialToken.sol";
 import "../../libraries/BondingCurveMath.sol";
+import "../../libraries/EIP712MetaTransaction.sol";
 
-contract SocialToken is ISocialToken, Ownable, ERC20, ReentrancyGuard {
+contract SocialToken is ISocialToken, Ownable, ERC20, ReentrancyGuard, EIP712MetaTransaction {
   using SafeERC20 for IERC20;
 
   /////////////////////////
@@ -50,9 +51,9 @@ contract SocialToken is ISocialToken, Ownable, ERC20, ReentrancyGuard {
     uint256 fee = (mintPrice * 15) / 100;
     uint256 creatorFee = getCreatorFee(fee);
     reserve += mintPrice - fee;
-    _mint(msg.sender, amount);
+    _mint(msgSender() , amount);
     IERC20 _collateral = collateral;
-    _collateral.safeTransferFrom(msg.sender, address(this), mintPrice);
+    _collateral.safeTransferFrom(msgSender() , address(this), mintPrice);
     claimAmount += creatorFee;
     emit Minted(
       msg.sender,
@@ -72,9 +73,9 @@ contract SocialToken is ISocialToken, Ownable, ERC20, ReentrancyGuard {
     require(amount <= supply, "SocialToken: amount greater than supply");
     uint256 burnPrice = getBurnPrice(amount);
     reserve -= burnPrice;
-    _burn(msg.sender, amount);
-    collateral.safeTransfer(msg.sender, burnPrice);
-    emit Burned(msg.sender, amount, burnPrice, supply - amount, reserve);
+    _burn(msgSender() , amount);
+    collateral.safeTransfer(msgSender() , burnPrice);
+    emit Burned(msgSender() , amount, burnPrice, supply - amount, reserve);
   }
 
   ////////////////////////////////
@@ -86,14 +87,14 @@ contract SocialToken is ISocialToken, Ownable, ERC20, ReentrancyGuard {
   function withdraw() external override onlyOwner nonReentrant {
     IERC20 _collateral = collateral;
     uint256 withdrawableFunds = _collateral.balanceOf(address(this)) - reserve;
-    _collateral.safeTransfer(msg.sender, withdrawableFunds);
+    _collateral.safeTransfer(msgSender() , withdrawableFunds);
   }
 
   /// @dev Withdraw creator Fee from the contract
   /// @param walletAddress (address): Address of wallet to transfer
   /// @param amount (uint256): Amount to transfer
   function claimCreatorFee(address walletAddress, uint256 amount) external nonReentrant {
-    require(msg.sender == creator, "SocialToken: Not owner of social token");
+    require(msgSender()  == creator, "SocialToken: Not owner of social token");
     require(walletAddress != address(0), "SocialToken: invalid wallet address");
     require(amount <= claimAmount, "SocialToken: transfer amount greater than balance");
     IERC20 _collateral = collateral;

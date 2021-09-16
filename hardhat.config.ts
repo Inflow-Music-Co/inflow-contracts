@@ -16,6 +16,10 @@ const config: HardhatUserConfig = {
         blockNumber: 12400000,
       },
     },
+    rinkeby: {
+      url: 'https://eth-rinkeby.alchemyapi.io/v2/Oq7yS7NdZbdW-beaojb1-8CuN_mjBpFc',
+      accounts: [`${process.env.DEV_PRIVATE_KEY}`]
+    },
     matic: {
       url: "https://rpc-mainnet.maticvigil.com",
       // accounts: [process.env.DEV_PRIVATE_KEY as string],
@@ -27,6 +31,9 @@ const config: HardhatUserConfig = {
   },
   solidity: {
     compilers: [
+      {
+        version: "0.6.6"
+      },
       {
         version: "0.8.4",
         settings: {
