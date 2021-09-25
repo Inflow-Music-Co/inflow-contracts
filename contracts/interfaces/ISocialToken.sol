@@ -11,6 +11,7 @@ interface ISocialToken is IERC20 {
         uint256 slope;
         string name;
         string symbol;
+        string version;
     }
 
     event Minted(
