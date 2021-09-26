@@ -1,7 +1,7 @@
 import { ethers } from "hardhat";
 import * as fs from "fs";
 
-const contractName = "";
+const contractName = "SocialTokenFactory";
 const constructorParams: any[] = [];
 const deploymentsPath = "deployments/";
 

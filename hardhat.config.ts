@@ -16,6 +16,10 @@ const config: HardhatUserConfig = {
         blockNumber: 12400000,
       },
     },
+    rinkeby: {
+      url: `https://eth-rinkeby.alchemyapi.io/v2/${process.env.ALCHEMY_API_KEY}`,
+      accounts: [`${process.env.DEV_PRIVATE_KEY}`]
+    },
     matic: {
       url: "https://rpc-mainnet.maticvigil.com",
       // accounts: [process.env.DEV_PRIVATE_KEY as string],
