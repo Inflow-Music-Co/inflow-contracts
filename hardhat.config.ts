@@ -6,19 +6,20 @@ import "hardhat-gas-reporter";
 import "@nomiclabs/hardhat-etherscan";
 import { HardhatUserConfig } from "hardhat/config";
 require("dotenv").config();
+require('hardhat-abi-exporter');
 
 const config: HardhatUserConfig = {
-  defaultNetwork: "hardhat",
+  defaultNetwork: "matic",
   networks: {
     hardhat: {
       forking: {
-        url: `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_API_KEY}`,
+        url: "https://polygon-mainnet.g.alchemy.com/v2/YKCKYqogO-8zEa5tKpOVdeQ8tuTG_hfu",
         blockNumber: 12400000,
       },
     },
     matic: {
-      url: "https://rpc-mainnet.maticvigil.com",
-      // accounts: [process.env.DEV_PRIVATE_KEY as string],
+      url: "https://matic-mumbai.chainstacklabs.com",
+      accounts: [`${process.env.DEV_PRIVATE_KEY}`]
     },
     mumbai: {
       url: "https://rpc-mumbai.maticvigil.com",
@@ -46,9 +47,18 @@ const config: HardhatUserConfig = {
     enabled: process.env.REPORT_GAS ? true : false,
     coinmarketcap: process.env.COINMARKETCAP,
   },
+  // abiExporter: {
+  //   path: './data/abi',
+  //   clear: true,
+  //   flat: true,
+  //   only: [],
+  //   spacing: 2,
+  //   pretty: true,
+  // },
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY,
   },
+  
 };
 
 export default config;
