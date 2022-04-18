@@ -6,9 +6,10 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 interface ISocialToken is IERC20 {
     struct CreateData {
         address creator;
-        address collateral;
+        address usdcCollateral;
+        address usdtCollateral;
         uint256 maxSupply;
-        uint256 slope;
+        uint256 slope; 
         string name;
         string symbol;
     }
@@ -29,11 +30,13 @@ interface ISocialToken is IERC20 {
         uint256 reserve
     );
 
-    function mint(uint256) external;
+    function mint(uint256, address) external;
 
     function burn(uint256) external;
 
     function withdraw() external;
+
+    function updateCreator(address) external;
 
     function getMintPrice(uint256) external view returns (uint256);
 

@@ -13,6 +13,7 @@ type CreateData = {
 };
 
 describe("Inflow1155 Tests", () => {
+const sleep = (waitTimeInMs: any) => new Promise(resolve => setTimeout(resolve, waitTimeInMs));
   let signers: Signer[],
     admin: Signer,
     accounts: string[],
@@ -25,7 +26,8 @@ describe("Inflow1155 Tests", () => {
     NEW_BASE_URI = "ipfs.io/ipfs/",
     URI = "TEST_URI";
 
-  before(async () => {
+  before(async function (){
+      this.timeout(120000)
     try {
       signers = await ethers.getSigners();
       [admin] = signers;
@@ -51,31 +53,32 @@ describe("Inflow1155 Tests", () => {
     }
   });
 
-  it("creates tokens", async () => {
+  it(" 1 - creates tokens", async () => {
     try {
       const tokenId = await create(inflowCreator, data);
       expect(await inflow.balanceOf(creator, tokenId)).to.equal(data.supply);
     } catch (err) {
       console.error(err);
     }
-  });
+  }).timeout(120000);
 
-  it("create tx reverts if max supply is 0", async () => {
+it(" 2 - create tx reverts if max supply is 0", async () => {
+    await sleep(1000);
     try {
-      await expect(
-        inflowCreator.create({
+      await expect(( await inflowCreator.create({
           supply: 10,
           maxSupply: 0,
           uri: URI,
           royalties: formatCreators(accounts.slice(0, 3)),
         })
-      ).to.be.reverted;
+      ).wait()).to.be.reverted;
     } catch (err) {
       console.error(err);
     }
-  });
+  }).timeout(120000);
 
-  it("mints tokens", async () => {
+  it(" 3 - mints tokens", async () => {
+    await sleep(3000);
     try {
       const tokenId = await create(inflowCreator, data);
       expect(await inflow.balanceOf(creator, tokenId)).to.equal(data.supply);
@@ -84,30 +87,32 @@ describe("Inflow1155 Tests", () => {
     } catch (err) {
       console.error(err);
     }
-  });
+  }).timeout(120000);
 
-  it("mint tx reverts if msg.sender is not creator", async () => {
+  it(" 4 - mint tx reverts if msg.sender is not creator", async () => {
+    await sleep(2000);
     try {
       const tokenId = await create(inflowCreator, data);
-      await expect(inflow.connect(signers[2]).mint(tokenId, 1)).to.be.reverted;
+      await expect((await (inflow.connect(signers[2]).mint(tokenId, 1))).wait()).to.be.reverted;
     } catch (err) {
       console.error(err);
     }
-  });
+  }).timeout(120000);
 
-  it("mint tx reverts if current supply + mint amount is greater than max supply", async () => {
+  it(" 5 - mint tx reverts if current supply + mint amount is greater than max supply", async () => {
+    await sleep(2000);
     try {
       const tokenId = await create(inflowCreator, data);
       const { supply, maxSupply } = await inflow.getToken(tokenId);
       const supplyDiff = maxSupply.sub(supply);
-      await expect(inflowCreator.mint(tokenId, supplyDiff.add(10))).to.be
-        .reverted;
+      await expect((await (inflowCreator.mint(tokenId, supplyDiff.add(10)))).wait()).to.be.reverted;
     } catch (err) {
       console.error(err);
     }
-  });
+  }).timeout(120000);
 
-  it("batch mints tokens", async () => {
+  it(" 6 - batch mints tokens", async () => {
+    await sleep(3000);
     try {
       const { supply, maxSupply } = data;
       const tokenId = await create(inflowCreator, data);
@@ -122,80 +127,86 @@ describe("Inflow1155 Tests", () => {
     } catch (err) {
       console.error(err);
     }
-  });
+  }).timeout(120000);
 
-  it("batch mint tx reverts if tokenIds length does not equal amounts length", async () => {
+  it(" 7 - batch mint tx reverts if tokenIds length does not equal amounts length", async () => {
+    await sleep(3000);
     try {
       const tokenId = await create(inflowCreator, data);
-      await expect(inflowCreator.mintBatch([tokenId], [1, 1])).to.be.reverted;
+      await expect((await (inflowCreator.mintBatch([tokenId], [1, 1]))).wait()).to.be.reverted;
     } catch (err) {
       console.error(err);
     }
-  });
+  }).timeout(120000);
 
-  it("batch mint tx reverts if msg.sender is not creator", async () => {
+  it(" 8 - batch mint tx reverts if msg.sender is not creator", async () => {
+    await sleep(3000);
     try {
       const tokenId = await create(inflowCreator, data);
-      await expect(inflow.connect(signers[3]).mintBatch([tokenId], [1])).to.be
-        .reverted;
+      expect(inflow.connect(signers[3]).mintBatch([tokenId], [1])).to.be
+     .revertedWith;
     } catch (err) {
       console.error(err);
     }
-  });
+  }).timeout(120000);
 
-  it("batch mint tx reverts if msg.sender is not creator", async () => {
+  it(" 9 - batch mint tx reverts if Tokens amount is greater then max supply", async () => {
+    await sleep(3000);
     try {
       const tokenId = await create(inflowCreator, data);
       const { supply, maxSupply } = await inflow.getToken(tokenId);
       const supplyDiff = maxSupply.sub(supply);
-      await expect(inflowCreator.mintBatch([tokenId], [supplyDiff.add(10)])).to
-        .be.reverted;
+      expect(inflowCreator.mintBatch([tokenId], [supplyDiff.add(10)])).to
+        .be.revertedWith;
     } catch (err) {
       console.error(err);
     }
-  });
+  }).timeout(120000);
 
-  it("burns tokens", async () => {
+  it(" 10 - burns tokens", async () => {
+    await sleep(3000);
     try {
       const tokenId = await create(inflowCreator, data);
       expect(await inflow.balanceOf(creator, tokenId)).to.equal(data.supply);
       await (await inflowCreator.burn(tokenId, data.supply)).wait();
       expect(await inflow.balanceOf(creator, tokenId)).to.equal(0);
-      await expect(inflowCreator.mint(tokenId, 90)).to.be.reverted;
+      expect(inflowCreator.mint(tokenId, 90)).to.be.revertedWith;
     } catch (err) {
       console.error(err);
     }
-  });
+  }).timeout(120000);
 
-  it("burn tx reverts if token does not exist", async () => {
+  it(" 11 - burn tx reverts if token does not exist", async () => {
     try {
-      await expect(inflow.burn(300, 1)).to.be.reverted;
+      expect(inflow.burn(300, 1)).to.be.revertedWith;
     } catch (err) {
       console.error(err);
     }
-  });
+  }).timeout(120000);
 
-  it("updates base uri", async () => {
+  it(" 12 - updates base uri", async () => {
     try {
       expect(await inflow.baseUri()).to.equal("");
-      (await inflow.setBaseUri(OLD_BASE_URI)).wait();
+      await(await inflow.setBaseUri(OLD_BASE_URI)).wait()
+      await sleep(1000);
       expect(await inflow.baseUri()).to.equal(OLD_BASE_URI);
-      (await inflow.setBaseUri(NEW_BASE_URI)).wait();
+      await (await inflow.setBaseUri(NEW_BASE_URI)).wait();
+      await sleep(2000);
       expect(await inflow.baseUri()).to.equal(NEW_BASE_URI);
     } catch (err) {
       console.error(err);
     }
-  });
+  }).timeout(120000);
 
-  it("uri function reverts if token does not exist", async () => {
+  it(" 13 - uri function reverts if token does not exist", async () => {
     try {
       await expect(inflow.uri(300)).to.be.reverted;
     } catch (err) {
       console.error(err);
     }
-  });
+  }).timeout(120000);
 
-  it("gets token uri", async () => {
+  it(" 14 - gets token uri", async () => {
     try {
       const tokenId = await create(inflowCreator, data);
       expect(await inflow.balanceOf(creator, tokenId)).to.equal(data.supply);
@@ -203,18 +214,24 @@ describe("Inflow1155 Tests", () => {
       expect(await inflow.uri(tokenId)).to.equal(baseUri + URI);
       const data2 = data;
       data2.uri = "";
+      await sleep(2000);
       const tokenId2 = await create(inflowCreator, data2);
+      await sleep(2000);
       expect(await inflow.uri(tokenId2)).to.equal(
         baseUri + tokenId2.toNumber()
       );
-      (await inflow.setBaseUri("")).wait();
+      await sleep(2000);
+      await(await inflow.setBaseUri("")).wait();
+      await sleep(2000);
       expect(await inflow.uri(tokenId)).to.equal(URI);
     } catch (err) {
       console.error(err);
     }
-  });
+  }).timeout(120000);
 
-  it("gets token given tokenId", async () => {
+  it(" 15 - gets token given tokenId", async () => {
+    await sleep(3000);
+      
     try {
       const tokenId = await create(inflowCreator, data);
       const token = await inflow.getToken(tokenId);
@@ -225,9 +242,9 @@ describe("Inflow1155 Tests", () => {
     } catch (err) {
       console.error(err);
     }
-  });
+  }).timeout(120000);
 
-  it("getToken returns uninitialized Token struct if given uninitialized tokenId", async () => {
+  it(" 16 - getToken returns uninitialized Token struct if given uninitialized tokenId", async () => {
     try {
       const token = await inflow.getToken(300);
       expect(token.creator).to.equal(
@@ -239,26 +256,29 @@ describe("Inflow1155 Tests", () => {
     } catch (err) {
       console.error(err);
     }
-  });
+  }).timeout(120000);
 
-  it("getToken reverts if tokenId is 0", async () => {
+  it(" 17 - getToken reverts if tokenId is 0", async () => {
     try {
       await expect(inflow.getToken(0)).to.be.reverted;
     } catch (err) {
       console.error(err);
     }
-  });
+  }).timeout(120000);
 
-  it("disables whitelist to create with non-whitelisted accounts", async () => {
+  it(" 18 - disables whitelist to create with non-whitelisted accounts", async () => {
+    await sleep(3000);
     await (await inflow.setWhitelistEnabled(false)).wait();
     const idx = 3;
+    await sleep(20000);
     const tokenId = await create(inflow.connect(signers[idx]), data);
     expect(await inflow.balanceOf(accounts[idx], tokenId)).to.equal(
       data.supply
     );
-  });
+  }).timeout(120000);
 
-  it("implements raribleV2 royalties", async () => {
+  it(" 19 - implements raribleV2 royalties", async () => {
+    await sleep(3000);
     try {
       const royalties = formatCreators(accounts.slice(0, 3));
       const tokenId = await create(inflowCreator, data);
@@ -283,37 +303,35 @@ describe("Inflow1155 Tests", () => {
     } catch (err) {
       console.error(err);
     }
-  });
+  }).timeout(120000);
 
-  it("royalty account must be msg.sender to update royalty account", async () => {
+  it(" 20 - royalty account must be msg.sender to update royalty account", async () => {
     try {
       await expect(inflow.updateRoyaltyAccount(1, accounts[7], accounts[0])).to
         .be.reverted;
     } catch (err) {
       console.error(err);
     }
-  });
+  }).timeout(120000);
 
-  it("royalties length must be <= 16", async () => {
+  it(" 21 - royalties length must be <= 16", async () => {
     try {
-      await expect(
-        inflow.create({
+      expect((await inflow.create({
           supply: 10,
           maxSupply: 100,
           uri: URI,
-          royalties: formatCreators(accounts.slice(0, 17)),
-        })
-      ).to.be.reverted;
+          royalties: formatCreators(accounts.slice(0, 18)),
+        })).wait()).to.be.revertedWith;
     } catch (err) {
       console.error(err);
     }
   });
-});
+}).timeout(120000);
 
 async function create(
   inflow: Inflow1155,
   createData: CreateData
 ): Promise<BigNumber> {
-  const tokenId = await getEventData(inflow.create(createData), 1);
+  const tokenId = await getEventData(inflow.create(createData), 1,2);
   return tokenId;
 }

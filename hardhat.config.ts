@@ -9,7 +9,7 @@ require("dotenv").config();
 require('hardhat-abi-exporter');
 
 const config: HardhatUserConfig = {
-  defaultNetwork: "matic",
+  defaultNetwork: "hardhat",
   networks: {
     hardhat: {
       forking: {

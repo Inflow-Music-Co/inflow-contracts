@@ -13,7 +13,7 @@ export async function getTxEventData(
       : input
   ) as ContractTransaction;
   const { logs } = await tx.wait();
-  const idx = _idx ?? logs.length - 1;
+  const idx = _idx ?? logs.length - 2;
   return contractInterface.decodeEventLog(
     eventFragment,
     logs[idx].data,
@@ -33,7 +33,7 @@ export async function getEventData(
   ) as ContractTransaction;
   const { events } = await tx.wait();
   if (events === undefined) throw new Error("events array undefined");
-  const { args } = events[eventsIdx ?? events.length - 1];
+  const { args } = events[eventsIdx ?? events.length - 2];
   if (args === undefined) throw new Error("args array undefined");
   return argsIdx === undefined ? args : args[argsIdx];
 }

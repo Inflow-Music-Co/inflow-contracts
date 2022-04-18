@@ -5,26 +5,31 @@ import { formatUsdc, parseUsdc, getTxEventData } from "./utils";
 import { abi as SOCIALTOKEN_ABI } from "../artifacts/contracts/token/social/SocialToken.sol/SocialToken.json";
 import {
   SocialToken,
-  SocialTokenFactory,
-  SocialTokenFactory__factory,
   MockUSDC,
+  MockUSDT,
+  MockUSDT__factory,
   MockUSDC__factory,
 } from "../typechain";
+import { parseEther } from "ethers/lib/utils";
 
-describe("SocialToken Tests", () => {
+describe("SocialToken Tests", async function () {
+    this.timeout(300000)
   let signers: Signer[],
     accounts: string[],
     admin: Signer,
     minter: Signer,
     adminAddress: string,
     minterAddress: string,
+    creatorAddress:string,
     social: SocialToken,
     socialMinter: SocialToken,
-    socialFactoryFactory: SocialTokenFactory__factory,
-    socialFactory: SocialTokenFactory,
     usdcFactory: MockUSDC__factory,
+    usdtFactory:MockUSDT__factory,
     usdc: MockUSDC,
-    usdcMinter: MockUSDC;
+    usdt:MockUSDT,
+    usdcMinter: MockUSDC,
+    usdtMinter : MockUSDT;
+
   const AMOUNT = utils.parseEther("100");
 
   before(async () => {
@@ -34,40 +39,44 @@ describe("SocialToken Tests", () => {
       accounts = await Promise.all(
         signers.map((signer) => signer.getAddress())
       );
-      [adminAddress, minterAddress] = accounts;
-      [usdcFactory, socialFactoryFactory] = await Promise.all([
+      [adminAddress, minterAddress,creatorAddress] = accounts;
+      [usdcFactory, usdtFactory] = await Promise.all([
         ethers.getContractFactory(
           "MockUSDC",
           admin
         ) as Promise<MockUSDC__factory>,
         ethers.getContractFactory(
-          "SocialTokenFactory",
-          admin
-        ) as Promise<SocialTokenFactory__factory>,
+            "MockUSDT",
+            admin
+          ) as Promise<MockUSDT__factory>,
       ]);
-      [usdc, socialFactory] = await Promise.all([
-        usdcFactory.deploy(),
-        socialFactoryFactory.deploy(),
+      const _socialToken = ethers.getContractFactory("SocialToken");
+
+      [usdc,usdt] = await Promise.all([
+       await usdcFactory.deploy(),
+       await usdtFactory.deploy()   
       ]);
+
+      social =  await (await _socialToken).deploy({
+        creator: adminAddress,
+        usdcCollateral: usdc.address,
+        usdtCollateral: usdt.address,
+        maxSupply: utils.parseEther("1000000000000000").toString(),
+        slope: utils.parseEther("1").toString(),
+        name: "test",
+        symbol: "TEST"}
+        ),
+
       usdcMinter = usdc.connect(minter);
-      (await socialFactory.whitelist(adminAddress)).wait();
-      const [socialTokenAddress] = await getTxEventData(
-        socialFactory.create({
-          creator: adminAddress,
-          collateral: usdc.address,
-          maxSupply: utils.parseEther("10000000"),
-          slope: utils.parseEther("1"),
-          name: "name",
-          symbol: "SYMBOL",
-        }),
-        "SocialTokenCreated(address, address)",
-        socialFactory.interface
-      );
+      usdtMinter = usdt.connect(minter);
+
+
       social = new Contract(
-        socialTokenAddress,
+        social.address,
         SOCIALTOKEN_ABI,
         admin
       ) as SocialToken;
+
       socialMinter = social.connect(minter);
       expect(await social.owner()).to.equal(adminAddress);
     } catch (err) {
@@ -75,46 +84,47 @@ describe("SocialToken Tests", () => {
     }
   });
 
-  it("mints tokens", async () => {
+  it(" 1 - mints tokens using USDC ", async () => {
     try {
       await mint(socialMinter, usdcMinter, AMOUNT);
       expect(await social.balanceOf(minterAddress)).to.equal(AMOUNT);
       expect(await usdc.balanceOf(minterAddress)).to.equal(0);
+      expect(await usdt.balanceOf(minterAddress)).to.equal(0);
     } catch (err) {
       console.error(err);
     }
   });
-
-  it("mint tx reverts if amount is 0", async () => {
+ 
+  it(" 2 - mint tx reverts if amount is 0", async () => {
     try {
-      await expect(socialMinter.mint(0)).to.be.reverted;
+      await expect(socialMinter.mint(0,usdc.address)).to.be.reverted;
     } catch (err) {
       console.error(err);
     }
   });
 
-  it("mint tx reverts if amount resolves negative or 0 mint price", async () => {
+  it(" 3 - mint tx reverts if amount resolves negative or 0 mint price", async () => {
     try {
       const mintPrice = await social.getMintPrice(1);
       expect(mintPrice).to.equal(0);
-      await expect(socialMinter.mint(1)).to.be.reverted;
+      await expect(socialMinter.mint(1,usdc.address)).to.be.reverted;
     } catch (err) {
       console.error(err);
     }
   });
 
-  it("mint tx reverts if current supply + mint amount is greater than max supply", async () => {
+  it(" 4 - mint tx reverts if current supply + mint amount is greater than max supply", async () => {
     try {
       const supply = await social.totalSupply();
       const maxSupply = await social.maxSupply();
       const diff = maxSupply.sub(supply);
-      await expect(socialMinter.mint(diff.add(10))).to.be.reverted;
+      await expect(socialMinter.mint(diff.add(10),usdc.address)).to.be.reverted;
     } catch (err) {
       console.error(err);
     }
   });
 
-  it("burns tokens", async () => {
+  it(" 5 - burns tokens", async () => {
     try {
       const burnPrice = await burn(socialMinter, AMOUNT);
       expect(await social.balanceOf(minterAddress)).to.equal(0);
@@ -124,7 +134,7 @@ describe("SocialToken Tests", () => {
     }
   });
 
-  it("burn tx reverts if amount is 0", async () => {
+  it(" 6 - burn tx reverts if amount is 0", async () => {
     try {
       await expect(socialMinter.burn(0)).to.be.reverted;
       const supply = await social.totalSupply();
@@ -134,7 +144,7 @@ describe("SocialToken Tests", () => {
     }
   });
 
-  it("burn tx reverts if amount is greater than outstanding supply", async () => {
+  it(" 7 - burn tx reverts if amount is greater than outstanding supply", async () => {
     try {
       const supply = await social.totalSupply();
       await expect(socialMinter.burn(supply.add(1))).to.be.reverted;
@@ -143,7 +153,7 @@ describe("SocialToken Tests", () => {
     }
   });
 
-  it("getBurnPrice function reverts if amount is 0", async () => {
+  it(" 8 - getBurnPrice function reverts if amount is 0", async () => {
     try {
       await expect(socialMinter.getBurnPrice(0)).to.be.reverted;
     } catch (err) {
@@ -151,7 +161,7 @@ describe("SocialToken Tests", () => {
     }
   });
 
-  it("getBurnPrice function reverts if amount is greater than outstanding supply", async () => {
+  it(" 9 - getBurnPrice function reverts if amount is greater than outstanding supply", async () => {
     try {
       const supply = await social.totalSupply();
       await expect(socialMinter.getBurnPrice(supply.add(1))).to.be.reverted;
@@ -160,7 +170,7 @@ describe("SocialToken Tests", () => {
     }
   });
 
-  it("withdraws funds to owner", async () => {
+  it(" 10 - withdraws funds to owner", async () => {
     try {
       await (await usdc.mintTo(social.address, parseUsdc("100"))).wait();
       const preBalance = await usdc.balanceOf(adminAddress);
@@ -172,7 +182,7 @@ describe("SocialToken Tests", () => {
     }
   });
 
-  it("withdraw tx reverts if msg.sender is not owner", async () => {
+  it(" 11 - withdraw tx reverts if msg.sender is not owner", async () => {
     try {
       await (await usdc.mintTo(social.address, parseUsdc("100"))).wait();
       await expect(social.connect(signers[2]).withdraw()).to.be.reverted;
@@ -181,7 +191,7 @@ describe("SocialToken Tests", () => {
     }
   });
 
-  it("getMintPrice uses simple integral calculation if supply is 0", async () => {
+  it(" 12 - getMintPrice uses simple integral calculation if supply is 0", async () => {
     try {
       const supply = await social.totalSupply();
       expect(supply).to.equal(0);
@@ -198,7 +208,7 @@ describe("SocialToken Tests", () => {
     }
   });
 
-  it("getMintPrice uses implicit reserve integral calculation if supply is greater than 0", async () => {
+  it(" 13 - getMintPrice uses implicit reserve integral calculation if supply is greater than 0", async () => {
     try {
       await mint(socialMinter, usdcMinter, AMOUNT);
       const supply = await social.totalSupply();
@@ -211,19 +221,55 @@ describe("SocialToken Tests", () => {
       console.error(err);
     }
   });
+
+    it(" 14 - mints tokens using USDT ", async () => {
+    try {
+      await mint(socialMinter, usdtMinter, AMOUNT);
+      expect(await social.balanceOf(minterAddress)).to.equal(AMOUNT.add(AMOUNT));
+      expect(await usdt.balanceOf(minterAddress)).to.equal(0);
+    } catch (err) {
+      console.error(err);
+    }
+  });
+  it(" 15 - if burn price is greater then USDC-Colleteral balance then send remaing burnPrice in USDT ", async () => {
+    try {
+      const _usdc_bal = await usdc.balanceOf(social.address);
+      const _minter_bal = await usdc.balanceOf(minterAddress);
+      const _getburnPrice = await social.getBurnPrice(AMOUNT);
+      const burnPrice = await burn(socialMinter, AMOUNT);
+      expect(await social.balanceOf(minterAddress)).to.equal(AMOUNT);
+      expect(await usdc.balanceOf(minterAddress)).to.equal(_minter_bal.add(_usdc_bal));
+      expect(await usdt.balanceOf(minterAddress)).to.equal(_getburnPrice.sub(_usdc_bal))
+    } catch (err) {
+      console.error(err);
+    }
+  });
+
+  it(" 16 - Update the Creator address ", async () => {
+    try {
+       const updateCreator = await social.updateCreator(creatorAddress);
+       expect(await social.creator()).to.equal(creatorAddress);
+    } catch (err) {
+      console.error(err);
+    }
+  });
+
+
 });
 
+
+
 async function mint(
-  social: SocialToken,
-  usdc: MockUSDC,
-  amount: BigNumberish
-): Promise<BigNumber> {
-  const mintPrice = await social.getMintPrice(amount);
-  await (await usdc.mint(mintPrice)).wait();
-  await (await usdc.approve(social.address, mintPrice)).wait();
-  await (await social.mint(amount)).wait();
-  return mintPrice;
-}
+    social: SocialToken,
+    _coletrel: MockUSDC |MockUSDT,
+    amount: BigNumberish
+  ): Promise<BigNumber> {
+    const mintPrice = await social.getMintPrice(amount);
+    await (await _coletrel.mint(mintPrice) ).wait();
+    await (await _coletrel.approve(social.address, mintPrice)).wait();
+    await (await social.mint(amount,_coletrel.address)).wait();
+    return mintPrice;
+  }
 
 async function burn(
   social: SocialToken,

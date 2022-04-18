@@ -20,6 +20,9 @@ import {
   MockUSDC__factory,
   MockMinter,
   MockMinter__factory,
+  SocialToken__factory,
+  MockUSDT,
+  MockUSDT__factory,
 } from "../typechain";
 
 interface CreateData {
@@ -32,7 +35,9 @@ interface CreateData {
   royalties: Part[];
 }
 
-describe("Inflow1155BC Tests", () => {
+describe("Inflow1155BC  Tests", () => {
+  const sleep = (waitTimeInMs: any) => new Promise(resolve => setTimeout(resolve, waitTimeInMs));
+
   let signers: Signer[],
     admin: Signer,
     accounts: string[],
@@ -57,12 +62,15 @@ describe("Inflow1155BC Tests", () => {
     socialFactory: SocialTokenFactory,
     mockMinter: MockMinter,
     mockMinterFactory: MockMinter__factory,
+    usdtFactory:MockUSDT__factory,
+    usdt:MockUSDT,
     _tokenId: BigNumber;
   const OLD_BASE_URI = "https://ipfs.io/ipfs/",
     NEW_BASE_URI = "ipfs.io/ipfs/",
     REQUIRED_SOCIAL_TOKEN_BALANCE = utils.parseEther("1");
 
-  before(async () => {
+  before(async  function() {
+    this.timeout(600000)
     try {
       signers = await ethers.getSigners();
       [admin, minter, creator, nonWhitelisted] = signers;
@@ -71,7 +79,7 @@ describe("Inflow1155BC Tests", () => {
       );
       [adminAddress, minterAddress, creatorAddress, nonWhitelistedAddress] =
         accounts;
-      [inflowFactory, usdcFactory, socialFactoryFactory, mockMinterFactory] =
+      [inflowFactory, usdcFactory, socialFactoryFactory, mockMinterFactory, usdtFactory] =
         await Promise.all([
           ethers.getContractFactory(
             "Inflow1155BC",
@@ -85,45 +93,57 @@ describe("Inflow1155BC Tests", () => {
           ethers.getContractFactory(
             "MockMinter"
           ) as Promise<MockMinter__factory>,
+            ethers.getContractFactory(
+                "MockUSDT",
+                admin
+              ) as Promise<MockUSDT__factory>,
         ]);
       usdc = await usdcFactory.deploy();
+      usdt = await usdtFactory.deploy()  ;
+      await sleep(50000)
       usdcCreator = usdc.connect(creator);
       usdcMinter = usdc.connect(minter);
-      [inflow, socialFactory] = await Promise.all([
-        inflowFactory.deploy(usdc.address),
-        socialFactoryFactory.deploy(),
+      const _socialToken = ethers.getContractFactory("SocialToken");
+      [social,inflow,socialFactory] = await Promise.all([ 
+        social =  await (await _socialToken).deploy({
+            creator: adminAddress,
+            usdcCollateral: usdc.address,
+            usdtCollateral: usdt.address,
+            maxSupply: utils.parseEther("1000000000000000").toString(),
+            slope: utils.parseEther("1").toString(),
+            name: "test",
+            symbol: "TEST"}
+            ),
+    
+        
+      await inflowFactory.deploy(usdc.address),
+      await socialFactoryFactory.deploy()
       ]);
+
       inflowCreator = inflow.connect(creator);
       inflowMinter = inflow.connect(minter);
       // use social token factory to deploy new social token
       // whitelist creator
-      (await socialFactory.whitelist(adminAddress)).wait();
-      const socialTokenAddress = await getEventData(
-        socialFactory.create({
-          creator: adminAddress,
-          collateral: usdc.address,
-          maxSupply: utils.parseEther("10000000").toString(),
-          slope: utils.parseEther("1").toString(),
-          name: "test",
-          symbol: "TEST",
-        }),
-        0
-      );
+      await(await socialFactory.whitelist(adminAddress)).wait();
+      // await sleep(10000)
       // initialize social token contract object
       social = new Contract(
-        socialTokenAddress,
+        social.address,
         SOCIALTOKEN_ABI,
         admin
       ) as SocialToken;
       socialMinter = social.connect(minter);
       expect(await social.owner()).to.equal(adminAddress);
-      mockMinter = await mockMinterFactory.deploy(
+      mockMinter = (await mockMinterFactory.deploy(
         inflow.address,
         social.address,
         usdc.address
-      );
+      ));
+      await sleep(5000);
       // whitelist creator
-      (await inflow.whitelist(creatorAddress)).wait();
+      await(await inflow.whitelist(creatorAddress)).wait();
+      await sleep(5000);
+     
       _tokenId = await create(inflowCreator, usdcCreator, {
         curve: 2,
         social: social.address,
@@ -131,18 +151,18 @@ describe("Inflow1155BC Tests", () => {
         price: 0,
         maxSupply: 100,
         uri: "BEFORE_HOOK",
-        royalties: formatCreators(accounts.slice(18)),
+        royalties: formatCreators(accounts.slice(3)),
       });
     } catch (err) {
       console.error(err);
     }
   });
 
-  it("creates/mints/burns for all curves", async () => {
+  it(" 1 - creates/mints/burns for all curves", async () => {
     try {
-      for (let crv = 0; crv < 3; crv++) {
+      for (let crv = 0; crv < 1; crv++) {
         // create token
-        const creators = accounts.slice((crv + 1) * 3, (crv + 2) * 3);
+        const creators = accounts.slice((crv + 1) * 1, (crv + 2) * 1);
         const data: CreateData = {
           curve: crv,
           social: social.address,
@@ -154,6 +174,7 @@ describe("Inflow1155BC Tests", () => {
           uri: "TESTING_1_2_3" + crv.toString(),
           royalties: formatCreators(creators),
         };
+        await sleep(9000)
         const tokenId = await create(inflowCreator, usdcCreator, data);
         const token = await inflow.getToken(tokenId);
         const creatorTokenBalance = await inflow.balanceOf(
@@ -167,12 +188,16 @@ describe("Inflow1155BC Tests", () => {
         expect(token.maxSupply).to.equal(data.maxSupply);
         expect(token.uri).to.equal(data.uri);
 
+        await sleep(3000)
         // mint token
         await mintSocial(socialMinter, usdcMinter, data.socialBalance);
+        await sleep(3000)
         const creatorPreBalances = await Promise.all(
           creators.map(async (account) => await usdc.balanceOf(account))
         );
+        await sleep(4000)
         await mint(inflowMinter, usdcMinter, tokenId);
+        await sleep(4000)
         expect(await inflow.balanceOf(minterAddress, tokenId)).to.equal(1);
         const creatorPostBalances = await Promise.all(
           creators.map((account) => usdc.balanceOf(account))
@@ -182,40 +207,39 @@ describe("Inflow1155BC Tests", () => {
           expect(creatorPostBalances[i]).to.be.above(preBalance)
         );
         fees.forEach((fee, i) => expect(creatorPostBalances[i]).to.equal(fee));
-
         // burn token
         const preBurnBalance = await usdc.balanceOf(minterAddress);
-        (await inflowMinter.burn(tokenId, 1)).wait();
+        await(await inflowMinter.burn(tokenId, 1)).wait();
         expect(await usdc.balanceOf(minterAddress)).to.be.above(preBurnBalance);
       }
     } catch (err) {
       console.error(err);
     }
-  });
+  }).timeout(12000000);
 
-  it("only whitelisted accounts can create tokens", async () => {
+  it(" 2 - only whitelisted accounts can create tokens", async () => {
     try {
       await expect(
-        inflow.connect(signers[5]).create({
+         (await inflow.connect(signers[5]).create({
           curve: 2,
           social: social.address,
           socialBalance: REQUIRED_SOCIAL_TOKEN_BALANCE,
           price: 0,
           maxSupply: 100,
           uri: "BEFORE_HOOK",
-          royalties: formatCreators(accounts.slice(18)),
-        })
+          royalties: formatCreators(accounts.slice(0,3)),
+        })).wait()
       ).to.be.reverted;
     } catch (err) {
       console.error(err);
     }
-  });
+  }).timeout(180000);
 
-  it("create tx reverts with const curve and zero price", async () => {
+  it(" 3 - create tx reverts with const curve and zero price", async () => {
     try {
       const createPrice = await inflow.createPrice();
       await usdcMintAndApprove(usdc, inflow.address, createPrice);
-      await expect(
+      await expect((await
         inflowCreator.create({
           curve: 0,
           social: social.address,
@@ -223,87 +247,85 @@ describe("Inflow1155BC Tests", () => {
           price: 0,
           maxSupply: 100,
           uri: "BEFORE_HOOK",
-          royalties: formatCreators(accounts.slice(18)),
-        })
-      ).to.be.reverted;
+          royalties: formatCreators(accounts.slice(0,3)),
+        })).wait()
+        ).to.be.reverted;
     } catch (err) {
       console.error(err);
     }
-  });
+  }).timeout(180000);;
 
-  it("create tx reverts with non-const curve and non-zero price", async () => {
+  it(" 4 - create tx reverts with non-const curve and non-zero price", async () => {
     try {
       const createPrice = await inflow.createPrice();
       await usdcMintAndApprove(usdc, inflow.address, createPrice);
-      await expect(
-        inflowCreator.create({
-          curve: 2,
-          social: social.address,
-          socialBalance: REQUIRED_SOCIAL_TOKEN_BALANCE,
-          price: 1,
-          maxSupply: 100,
-          uri: "BEFORE_HOOK",
-          royalties: formatCreators(accounts.slice(18)),
-        })
+      await expect((await inflowCreator.create({
+        curve: 2,
+        social: social.address,
+        socialBalance: REQUIRED_SOCIAL_TOKEN_BALANCE,
+        price: 1,
+        maxSupply: 100,
+        uri: "BEFORE_HOOK",
+        royalties: formatCreators(accounts.slice(0,3)),
+      })).wait()
       ).to.be.reverted;
     } catch (err) {
       console.error(err);
     }
-  });
+  }).timeout(180000);;
 
-  it("create tx reverts if max supply is 0", async () => {
+  it(" 5 - create tx reverts if max supply is 0", async () => {
     try {
       const createPrice = await inflow.createPrice();
       await usdcMintAndApprove(usdc, inflow.address, createPrice);
-      await expect(
-        inflowCreator.create({
-          curve: 2,
-          social: social.address,
-          socialBalance: REQUIRED_SOCIAL_TOKEN_BALANCE,
-          price: 0,
-          maxSupply: 0,
-          uri: "BEFORE_HOOK",
-          royalties: formatCreators(accounts.slice(18)),
-        })
+      await expect((await inflowCreator.create({
+        curve: 2,
+        social: social.address,
+        socialBalance: REQUIRED_SOCIAL_TOKEN_BALANCE,
+        price: 0,
+        maxSupply: 0,
+        uri: "BEFORE_HOOK",
+        royalties: formatCreators(accounts.slice(0,3)),
+      })).wait()
       ).to.be.reverted;
     } catch (err) {
       console.error(err);
     }
-  });
+  }).timeout(180000);;
 
-  it("mint tx reverts if minter has less than required social token balance", async () => {
+  it(" 6 - mint tx reverts if minter has less than required social token balance", async () => {
     try {
       const { price, curve } = await inflow.getToken(_tokenId);
       const mintPrice =
         curve === 0 ? price : await getNextMintPrice(inflow, _tokenId);
       await usdcMintAndApprove(usdc, inflow.address, mintPrice);
-      await (await inflow.whitelist(accounts[10])).wait();
-      await expect(inflow.connect(signers[10]).mint(_tokenId)).to.be.reverted;
+      await (await inflow.whitelist(accounts[4])).wait();
+      await expect((await inflow.connect(signers[4]).mint(_tokenId)).wait()).to.be.reverted;
     } catch (err) {
       console.error(err);
     }
-  });
+  }).timeout(180000);;
 
-  it("burn tx reverts if token does not exist", async () => {
+  it(" 7 - burn tx reverts if token does not exist", async () => {
     try {
-      await expect(inflow.burn(300, 1)).to.be.reverted;
+      await expect((await (inflow.burn(300, 1))).wait()).to.be.reverted;
     } catch (err) {
       console.error(err);
     }
-  });
+  }).timeout(180000);;
 
-  it("burn tx reverts if minimum supply argument is greater than or equal to current supply", async () => {
+  it(" 8 - burn tx reverts if minimum supply argument is greater than or equal to current supply", async () => {
     try {
       const { supply } = await inflow.getToken(1);
       const minimumSupply = supply._value.add(1);
-      await expect(inflow.burn(300, supply._value)).to.be.reverted;
-      await expect(inflow.burn(300, minimumSupply)).to.be.reverted;
+      await expect((await inflow.burn(300, supply._value)).wait()).to.be.reverted;
+      await expect((await inflow.burn(300, minimumSupply)).wait()).to.be.reverted;
     } catch (err) {
       console.error(err);
     }
-  });
+  }).timeout(600000);
 
-  it("if supply is 1, burn transactions also clear tokens mapping", async () => {
+  it(" 9 - if supply is 1, burn transactions also clear tokens mapping", async () => {
     try {
       const data: CreateData = {
         curve: 1,
@@ -332,17 +354,17 @@ describe("Inflow1155BC Tests", () => {
     } catch (err) {
       console.error(err);
     }
-  });
+  }).timeout(180000);;
 
-  it("uri function reverts if token does not exist", async () => {
+  it(" 10 - uri function reverts if token does not exist", async () => {
     try {
       await expect(inflow.uri(300)).to.be.reverted;
     } catch (err) {
       console.error(err);
     }
-  });
+  }).timeout(180000);;
 
-  it("getToken returns uninitialized Token struct if given uninitialized tokenId", async () => {
+  it(" 11 - getToken returns uninitialized Token struct if given uninitialized tokenId", async () => {
     try {
       const token = await inflow.getToken(300);
       expect(token.curve).to.equal(0);
@@ -357,17 +379,17 @@ describe("Inflow1155BC Tests", () => {
     } catch (err) {
       console.error(err);
     }
-  });
+  }).timeout(180000);;
 
-  it("getToken reverts if tokenId is 0", async () => {
+  it(" 12 - getToken reverts if tokenId is 0", async () => {
     try {
       await expect(inflow.getToken(0)).to.be.reverted;
     } catch (err) {
       console.error(err);
     }
-  });
+  }).timeout(180000);;
 
-  it("calculates mint and burn prices using all curves", async () => {
+  it(" 13 - calculates mint and burn prices using all curves", async () => {
     try {
       const supply = 2;
       for (let crv = 0; crv < 3; crv++) {
@@ -403,11 +425,11 @@ describe("Inflow1155BC Tests", () => {
     } catch (err) {
       console.error(err);
     }
-  });
+  }).timeout(180000);;
 
-  it("implements raribleV2 royalties", async () => {
+  it(" 14 - implements raribleV2 royalties", async () => {
     try {
-      const royalties = formatCreators(accounts.slice(18));
+      const royalties = formatCreators(accounts.slice(3));
       const preRoyalties = await inflow.getRoyalties(_tokenId);
       preRoyalties.forEach(([account, value], i) => {
         expect(account).to.equal(royalties[i].account);
@@ -415,11 +437,11 @@ describe("Inflow1155BC Tests", () => {
       });
       await (
         await inflow
-          .connect(signers[18])
-          .updateRoyaltyAccount(_tokenId, accounts[18], accounts[5])
+          .connect(signers[3])
+          .updateRoyaltyAccount(_tokenId, accounts[3], accounts[4])
       ).wait();
       const postRoyalties = await inflow.getRoyalties(_tokenId);
-      royalties[0].account = accounts[5];
+      royalties[0].account = accounts[4];
       postRoyalties.forEach(([account, value], i) => {
         expect(account).to.equal(royalties[i].account);
         expect(value).to.equal(royalties[i].value);
@@ -427,9 +449,9 @@ describe("Inflow1155BC Tests", () => {
     } catch (err) {
       console.error(err);
     }
-  });
+  }).timeout(180000);
 
-  it("royalty account must be msg.sender to update royalty account", async () => {
+  it(" 15 - royalty account must be msg.sender to update royalty account", async () => {
     try {
       await expect(
         inflow.updateRoyaltyAccount(_tokenId, accounts[7], accounts[0])
@@ -437,87 +459,86 @@ describe("Inflow1155BC Tests", () => {
     } catch (err) {
       console.error(err);
     }
-  });
+  }).timeout(180000);;
 
-  it("royalties length must be <= 16", async () => {
+  it(" 16 - royalties length must be <= 16", async () => {
     try {
-      await expect(
-        inflow.create({
-          curve: 1,
-          social: social.address,
-          socialBalance: REQUIRED_SOCIAL_TOKEN_BALANCE,
-          price: 0,
-          maxSupply: 10,
-          uri: "TEST_URI",
-          royalties: formatCreators(accounts.slice(0, 17)),
-        })
+      await expect((await inflow.create({
+        curve: 1,
+        social: social.address,
+        socialBalance: REQUIRED_SOCIAL_TOKEN_BALANCE,
+        price: 0,
+        maxSupply: 10,
+        uri: "TEST_URI",
+        royalties: formatCreators(accounts.slice(0, 17)),
+      })).wait()  
       ).to.be.reverted;
     } catch (err) {
       console.error(err);
     }
-  });
+  }).timeout(180000);;
 
-  it("updates base uri", async () => {
+  it(" 17 - updates base uri", async () => {
     try {
       expect(await inflow.baseUri()).to.equal("");
-      (await inflow.setBaseUri(OLD_BASE_URI)).wait();
+      await(await inflow.setBaseUri(OLD_BASE_URI)).wait();
       expect(await inflow.baseUri()).to.equal(OLD_BASE_URI);
-      (await inflow.setBaseUri(NEW_BASE_URI)).wait();
+      await(await inflow.setBaseUri(NEW_BASE_URI)).wait();
       expect(await inflow.baseUri()).to.equal(NEW_BASE_URI);
     } catch (err) {
       console.error(err);
     }
-  });
+  }).timeout(180000);;
 
-  it("setBaseUri tx reverts if called from non-owner account", async () => {
+  it(" 18 - setBaseUri tx reverts if called from non-owner account", async () => {
     try {
       await expect(inflow.connect(signers[8]).setBaseUri("Updated")).to.be
         .reverted;
     } catch (err) {
       console.error(err);
     }
-  });
+  }).timeout(180000);;
 
-  it("withdraws funds to owner", async () => {
+  it(" 19 - withdraws funds to owner", async () => {
     try {
       const preBalance = await usdc.balanceOf(adminAddress);
-      (await usdc.mintTo(inflow.address, parseUsdc("100"))).wait();
-      (await inflow.withdraw()).wait();
+      await(await usdc.mintTo(inflow.address, parseUsdc("100"))).wait();
+      await(await inflow.withdraw()).wait();
       const postBalance = await usdc.balanceOf(adminAddress);
       expect(postBalance).to.be.above(preBalance);
     } catch (err) {
       console.error(err);
     }
-  });
+  }).timeout(180000);;
 
-  it("withdraw tx reverts if msg.sender is not owner", async () => {
+  it(" 20 - withdraw tx reverts if msg.sender is not owner", async () => {
     try {
       await (await usdc.mintTo(social.address, parseUsdc("100"))).wait();
-      await expect(inflow.connect(signers[2]).withdraw()).to.be.reverted;
+      await expect((await inflow.connect(signers[2]).withdraw()).wait()).to.be.reverted;
     } catch (err) {
       console.error(err);
     }
-  });
+  }).timeout(180000);;
 
-  it("sets create prices", async () => {
+  it(" 21 - sets create prices", async () => {
     try {
-      (await inflow.setCreatePrice(parseUsdc("100"))).wait();
+      await(await inflow.setCreatePrice(parseUsdc("100"))).wait();
       expect(formatUsdc(await inflow.createPrice())).to.equal("100");
     } catch (err) {
       console.error(err);
     }
-  });
+  }).timeout(180000);;
 
-  it("setCreatePrice tx reverts if called from non-owner account", async () => {
+  it(" 22 - setCreatePrice tx reverts if called from non-owner account", async () => {
     try {
       await expect(inflow.connect(signers[8]).setCreatePrice(parseUsdc("100")))
         .to.be.reverted;
     } catch (err) {
       console.error(err);
     }
-  });
+  }).timeout(180000);;
 
-  it("enables contract addresses to mint tokens", async () => {
+  it("23 - enables contract addresses to mint tokens", async () => {
     try {
       (await inflow.setContractMintEnabled(true)).wait();
       const mintNFTPrice = await getNextMintPrice(inflow, _tokenId);
@@ -526,34 +547,34 @@ describe("Inflow1155BC Tests", () => {
         utils.parseEther("2")
       );
       await mintSocial(social, usdc, requiredBalance);
-      (await social.transfer(mockMinter.address, requiredBalance)).wait();
-      (await mockMinter.approveCollateral(inflow.address, mintNFTPrice)).wait();
-      (await mockMinter.mint(_tokenId)).wait();
+      await(await social.transfer(mockMinter.address, requiredBalance)).wait();
+      await(await mockMinter.approveCollateral(inflow.address, mintNFTPrice)).wait();
+      await(await mockMinter.mint(_tokenId)).wait();
       expect(await inflow.balanceOf(mockMinter.address, _tokenId)).to.equal(1);
     } catch (err) {
       console.error(err);
     }
-  });
+  }).timeout(600000);;
 
-  it("disables contract addresses from minting tokens", async () => {
+  it(" 24 - disables contract addresses from minting tokens", async () => {
     try {
       (await inflow.setContractMintEnabled(false)).wait();
-      await expect(mockMinter.mint(_tokenId)).to.be.reverted;
+      await expect((await mockMinter.mint(_tokenId)).wait()).to.be.reverted;
     } catch (err) {
       console.error(err);
     }
-  });
+  }).timeout(180000);;
 
-  it("setContractMintEnabled tx reverts if caller is non-owner", async () => {
+  it(" 25 - setContractMintEnabled tx reverts if caller is non-owner", async () => {
     try {
-      await expect(inflow.connect(signers[5]).setContractMintEnabled(false)).to
+      await expect((await (inflow.connect(signers[5]).setContractMintEnabled(false))).wait()).to
         .be.reverted;
     } catch (err) {
       console.error(err);
     }
-  });
+  }).timeout(180000);;
 
-  it("supports interfaces for ERC1155 and ERC165", async () => {
+  it(" 26 - supports interfaces for ERC1155 and ERC165", async () => {
     try {
       expect(await inflow.supportsInterface("0xd9b67a26")).to.be.true;
       expect(await inflow.supportsInterface("0x0e89341c")).to.be.true;
@@ -561,9 +582,9 @@ describe("Inflow1155BC Tests", () => {
     } catch (err) {
       console.error(err);
     }
-  });
+  }).timeout(180000);;
 
-  it("gets token uri", async () => {
+  it(" 27 - gets token uri", async () => {
     try {
       const baseUri = await inflow.baseUri();
       expect(await inflow.uri(_tokenId)).to.equal(baseUri + "BEFORE_HOOK");
@@ -574,19 +595,19 @@ describe("Inflow1155BC Tests", () => {
         price: 0,
         maxSupply: 10,
         uri: "",
-        royalties: formatCreators(accounts.slice(6, 12)),
+        royalties: formatCreators(accounts.slice(1, 2)),
       });
       expect(await inflow.uri(tokenId2)).to.equal(
         baseUri + tokenId2.toNumber()
       );
-      (await inflow.setBaseUri("")).wait();
+     await (await inflow.setBaseUri("")).wait();
       expect(await inflow.uri(_tokenId)).to.equal("BEFORE_HOOK");
     } catch (err) {
       console.error(err);
     }
-  });
+  }).timeout(900000);;
 
-  it("disables whitelist to create with non-whitelisted accounts", async () => {
+  it(" 28 - disables whitelist to create with non-whitelisted accounts", async () => {
     await (await inflow.setWhitelistEnabled(false)).wait();
     const data = {
       curve: 1,
@@ -595,7 +616,7 @@ describe("Inflow1155BC Tests", () => {
       price: 0,
       maxSupply: 10,
       uri: "",
-      royalties: formatCreators(accounts.slice(6, 12)),
+      royalties: formatCreators(accounts.slice(1, 2)),
     };
     const tokenId = await create(
       inflow.connect(nonWhitelisted),
@@ -603,19 +624,22 @@ describe("Inflow1155BC Tests", () => {
       data
     );
     expect(await inflow.balanceOf(nonWhitelistedAddress, tokenId)).to.equal(1);
-  });
-});
+  }).timeout(600000);
+}).timeout(600000);;
 
 async function mint(
   inflow: Inflow1155BC,
   usdc: MockUSDC,
   tokenId: BigNumberish
 ): Promise<void> {
+  const sleep = (waitTimeInMs: any) => new Promise(resolve => setTimeout(resolve, waitTimeInMs));
   const { price, curve } = await inflow.getToken(tokenId);
   const mintPrice =
     curve === 0 ? price : await getNextMintPrice(inflow, tokenId);
+  await sleep(5000)
   await usdcMintAndApprove(usdc, inflow.address, mintPrice);
-  (await inflow.mint(tokenId)).wait();
+  await sleep(5000)
+  await(await inflow.mint(tokenId)).wait();
 }
 
 async function getNextMintPrice(
@@ -633,8 +657,11 @@ async function mintSocial(
   amount: BigNumberish
 ): Promise<BigNumber> {
   const mintPrice = await social.getMintPrice(amount);
+  const sleep = (waitTimeInMs: any) => new Promise(resolve => setTimeout(resolve, waitTimeInMs));
+  await sleep(4000)
   await usdcMintAndApprove(usdc, social.address, mintPrice);
-  (await social.mint(amount)).wait();
+  await sleep(4000);
+//   await(await social.mint(amount,)).wait();
   return mintPrice;
 }
 
@@ -643,8 +670,11 @@ async function usdcMintAndApprove(
   spender: string,
   amount: BigNumberish
 ): Promise<void> {
-  (await usdc.mint(amount)).wait();
-  (await usdc.approve(spender, amount)).wait();
+  const sleep = (waitTimeInMs: any) => new Promise(resolve => setTimeout(resolve, waitTimeInMs));
+  await sleep(10000);
+  await(await usdc.mint(amount)).wait();
+  await sleep(3000);
+  await(await usdc.approve(spender, amount)).wait();
 }
 
 async function create(
@@ -652,9 +682,12 @@ async function create(
   usdc: MockUSDC,
   data: CreateData
 ): Promise<BigNumber> {
+  const sleep = (waitTimeInMs: any) => new Promise(resolve => setTimeout(resolve, waitTimeInMs));
   const createPrice = await inflow.createPrice();
+  await sleep(10000)
   await usdcMintAndApprove(usdc, inflow.address, createPrice);
-  const tokenId = await getEventData(inflow.create(data), 1);
+  await sleep(5000)
+  const tokenId = await getEventData(inflow.create(data), 1,4);
   return tokenId;
 }
 

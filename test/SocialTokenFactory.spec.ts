@@ -7,9 +7,13 @@ import {
   SocialTokenFactory__factory,
   MockUSDC,
   MockUSDC__factory,
+  MockUSDT,
+  MockUSDT__factory
 } from "../typechain";
 
-describe("SocialTokenFactory Tests", () => {
+describe("SocialTokenFactory Tests", async function () {
+
+ this.timeout(12000000000000)
   let signers: Signer[],
     accounts: string[],
     admin: Signer,
@@ -17,7 +21,9 @@ describe("SocialTokenFactory Tests", () => {
     socialFactoryFactory: SocialTokenFactory__factory,
     socialFactory: SocialTokenFactory,
     usdcFactory: MockUSDC__factory,
-    usdc: MockUSDC;
+    usdc: MockUSDC,
+    usdtFactory:MockUSDT__factory,
+    usdt:MockUSDT;
   const AMOUNT = ethers.utils.parseEther("100");
 
   before(async () => {
@@ -28,19 +34,24 @@ describe("SocialTokenFactory Tests", () => {
         signers.map((signer) => signer.getAddress())
       );
       [adminAddress] = accounts;
-      [usdcFactory, socialFactoryFactory] = await Promise.all([
+      [usdcFactory,usdtFactory, socialFactoryFactory] = await Promise.all([
         ethers.getContractFactory(
           "MockUSDC",
           admin
         ) as Promise<MockUSDC__factory>,
         ethers.getContractFactory(
+            "MockUSDT",
+            admin
+          ) as Promise<MockUSDT__factory>,
+        ethers.getContractFactory(
           "SocialTokenFactory",
           admin
         ) as Promise<SocialTokenFactory__factory>,
       ]);
-      [usdc, socialFactory] = await Promise.all([
-        usdcFactory.deploy(),
-        socialFactoryFactory.deploy(),
+      [usdc,usdt, socialFactory] = await Promise.all([
+       await usdcFactory.deploy(),
+       await usdtFactory.deploy(),
+       await  socialFactoryFactory.deploy(),
       ]);
     } catch (err) {
       console.error(err);
@@ -53,7 +64,8 @@ describe("SocialTokenFactory Tests", () => {
       const socialTokenAddress = await getEventData(
         socialFactory.create({
           creator: adminAddress,
-          collateral: usdc.address,
+          usdcCollateral : usdc.address,
+          usdtCollateral : usdt.address,
           maxSupply: ethers.utils.parseEther("10000000"),
           slope: ethers.utils.parseEther("1"),
           name: "name",
@@ -73,7 +85,8 @@ describe("SocialTokenFactory Tests", () => {
       await expect(
         socialFactory.connect(signers[3]).create({
           creator: adminAddress,
-          collateral: usdc.address,
+          usdcCollateral:usdc.address,
+          usdtCollateral:usdt.address,
           maxSupply: ethers.utils.parseEther("10000000"),
           slope: ethers.utils.parseEther("1"),
           name: "name",
@@ -90,7 +103,8 @@ describe("SocialTokenFactory Tests", () => {
       await (
         await socialFactory.create({
           creator: accounts[10],
-          collateral: usdc.address,
+          usdcCollateral:usdc.address,
+          usdtCollateral:usdt.address,
           maxSupply: ethers.utils.parseEther("10000000"),
           slope: ethers.utils.parseEther("1"),
           name: "name",
@@ -100,7 +114,8 @@ describe("SocialTokenFactory Tests", () => {
       await expect(
         socialFactory.create({
           creator: accounts[10],
-          collateral: usdc.address,
+          usdcCollateral:usdc.address,
+          usdtCollateral:usdt.address,
           maxSupply: ethers.utils.parseEther("10000000"),
           slope: ethers.utils.parseEther("1"),
           name: "name",
@@ -117,7 +132,8 @@ describe("SocialTokenFactory Tests", () => {
       const socialTokenAddressFromEvent = await getEventData(
         socialFactory.create({
           creator: accounts[15],
-          collateral: usdc.address,
+          usdcCollateral:usdc.address,
+          usdtCollateral:usdt.address,
           maxSupply: ethers.utils.parseEther("10000000"),
           slope: ethers.utils.parseEther("1"),
           name: "name",
