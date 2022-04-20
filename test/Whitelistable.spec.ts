@@ -5,8 +5,10 @@ import { Signer } from "ethers";
 import { getTxEventData } from "./utils";
 import { Whitelistable__factory, Whitelistable } from "../typechain";
 
-describe("Whitelistable Tests", () => {
-  let signers: Signer[],
+describe("Whitelistable Tests", async function (){
+   this.timeout(2000000)
+   const sleep = (waitTimeInMs: any) => new Promise(resolve => setTimeout(resolve, waitTimeInMs));
+   let signers: Signer[],
     accounts: string[],
     whitelistableFactory: Whitelistable__factory,
     whitelistable: Whitelistable,
@@ -31,7 +33,7 @@ describe("Whitelistable Tests", () => {
     }
   });
 
-  it("whitelists accounts", async () => {
+  it(" 1 - whitelists accounts", async () => {
     try {
       await (await whitelistable.whitelist(accounts[1])).wait();
       expect(await whitelistable.isWhitelisted(accounts[1])).to.be.true;
@@ -40,7 +42,7 @@ describe("Whitelistable Tests", () => {
     }
   });
 
-  it("unwhitelists accounts", async () => {
+  it(" 2 - unwhitelists accounts", async () => {
     try {
       await (await whitelistable.whitelist(accounts[2])).wait();
       expect(await whitelistable.isWhitelisted(accounts[2])).to.be.true;
@@ -51,39 +53,40 @@ describe("Whitelistable Tests", () => {
     }
   });
 
-  it("only owner can enable whitelist", async () => {
+  it(" 3 - only owner can enable whitelist", async () => {
     try {
-      await expect(whitelistableInvalidOwner.setWhitelistEnabled(true)).to.be
+      await expect(whitelistableInvalidOwner.callStatic.setWhitelistEnabled(true)).to.be
         .reverted;
     } catch (err) {
       console.error(err);
     }
   });
 
-  it("only owner can whitelist accounts", async () => {
+  it(" 4 - only owner can whitelist accounts", async () => {
     try {
-      await expect(whitelistableInvalidOwner.whitelist(accounts[3])).to.be
+      await expect(whitelistableInvalidOwner.callStatic.whitelist(accounts[3])).to.be
         .reverted;
     } catch (err) {
       console.error(err);
     }
   });
 
-  it("only owner can make unwhitelist accounts", async () => {
+  it(" 5 - only owner can make unwhitelist accounts", async () => {
     try {
-      await expect(whitelistableInvalidOwner.unwhitelist(accounts[3])).to.be
+      await expect((whitelistableInvalidOwner.callStatic.unwhitelist(accounts[3]))).to.be
         .reverted;
     } catch (err) {
       console.error(err);
     }
   });
 
-  it("successful whitelist transactions emit Whitelisted event", async () => {
+  it(" 6 - successful whitelist transactions emit Whitelisted event", async () => {
     try {
       const eventData = await getTxEventData(
         whitelistable.whitelist(accounts[4]),
         "Whitelisted(address)",
-        whitelistable.interface
+        whitelistable.interface,
+        0
       );
       expect(eventData[0]).to.equal(accounts[4]);
       expect(eventData.length).to.equal(1);
@@ -92,10 +95,11 @@ describe("Whitelistable Tests", () => {
     }
   });
 
-  it("unsuccessful whitelist transactions do not emit Whitelisted event", async () => {
+  it(" 7 - unsuccessful whitelist transactions do not emit Whitelisted event", async () => {
     try {
-      await (await whitelistable.whitelist(accounts[4])).wait();
-      const { logs } = await (
+      await(await whitelistable.whitelist(accounts[4])).wait()
+      await sleep(2000)
+      const {logs} = await (
         await whitelistable.whitelist(accounts[4])
       ).wait();
       expect(logs.length).to.equal(0);
@@ -104,13 +108,14 @@ describe("Whitelistable Tests", () => {
     }
   });
 
-  it("successful unwhitelist transactions emit Unwhitelisted event", async () => {
+  it(" 8 - successful unwhitelist transactions emit Unwhitelisted event", async () => {
     try {
       await (await whitelistable.whitelist(accounts[4])).wait();
       const eventData = await getTxEventData(
         whitelistable.unwhitelist(accounts[4]),
         "Unwhitelisted(address)",
-        whitelistable.interface
+        whitelistable.interface,
+        0
       );
       expect(eventData[0]).to.equal(accounts[4]);
       expect(eventData.length).to.equal(1);
@@ -119,11 +124,9 @@ describe("Whitelistable Tests", () => {
     }
   });
 
-  it("unsuccessful unwhitelist transactions do not emit Unwhitelisted event", async () => {
+  it(" 9 - unsuccessful unwhitelist transactions do not emit Unwhitelisted event", async () => {
     try {
-      const { logs } = await (
-        await whitelistable.unwhitelist(accounts[4])
-      ).wait();
+      const { logs } = await(await whitelistable.unwhitelist(accounts[4])).wait();
       expect(logs.length).to.equal(0);
     } catch (err) {
       console.error(err);

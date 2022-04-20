@@ -18,7 +18,9 @@ contract SocialToken is ISocialToken, Ownable, ERC20, ReentrancyGuard {
   /// @dev Creator's address
   address public creator;
   /// @dev Collateral token
-  IERC20 public collateral;
+  IERC20 public usdcCollateral; 
+    /// @dev second Collateral token
+  IERC20 public usdtCollateral; 
   /// @dev Slope to apply to bonding curve calculations
   uint256 public slope;
   /// @dev Max total supply set by owner
@@ -28,7 +30,8 @@ contract SocialToken is ISocialToken, Ownable, ERC20, ReentrancyGuard {
 
   constructor(CreateData memory data) ERC20(data.name, data.symbol) {
     creator = data.creator;
-    collateral = IERC20(data.collateral);
+    usdcCollateral = IERC20(data.usdcCollateral);
+    usdtCollateral = IERC20(data.usdtCollateral);
     slope = data.slope;
     maxSupply = data.maxSupply;
   }
@@ -38,8 +41,8 @@ contract SocialToken is ISocialToken, Ownable, ERC20, ReentrancyGuard {
   ////////////////////////////////
 
   /// @dev Mint tokens
-  /// @param amount (uint256): Amount to mint
-  function mint(uint256 amount) external override nonReentrant {
+  /// @param amount (uint256, address): Amount to mint and colleteral address
+  function mint(uint256 amount, address collateralAddress) external override nonReentrant {
     require(amount > 0, "SocialToken: amount is zero");
     uint256 mintPrice = getMintPrice(amount);
     require(mintPrice > 0, "SocialToken: amount too low");
@@ -49,9 +52,14 @@ contract SocialToken is ISocialToken, Ownable, ERC20, ReentrancyGuard {
     uint256 creatorFee = getCreatorFee(fee);
     reserve += mintPrice - fee;
     _mint(msg.sender, amount);
-    IERC20 _collateral = collateral;
+    
+    IERC20 _collateral = usdcCollateral;
+    if (address(usdtCollateral) == collateralAddress){
+      _collateral = usdtCollateral;
+    }
     _collateral.safeTransferFrom(msg.sender, address(this), mintPrice);
     _collateral.safeTransfer(creator, creatorFee);
+    _collateral.safeTransfer(owner(), fee - creatorFee);
     emit Minted(
       msg.sender,
       amount,
@@ -71,7 +79,14 @@ contract SocialToken is ISocialToken, Ownable, ERC20, ReentrancyGuard {
     uint256 burnPrice = getBurnPrice(amount);
     reserve -= burnPrice;
     _burn(msg.sender, amount);
-    collateral.safeTransfer(msg.sender, burnPrice);
+    uint256 collateralBalance = usdcCollateral.balanceOf(address(this));
+
+    if (collateralBalance < burnPrice){
+      usdcCollateral.safeTransfer(msg.sender, collateralBalance);
+      usdtCollateral.safeTransfer(msg.sender, burnPrice - collateralBalance); 
+    }else{
+      usdcCollateral.safeTransfer(msg.sender, burnPrice);
+    }
     emit Burned(msg.sender, amount, burnPrice, supply - amount, reserve);
   }
 
@@ -82,9 +97,16 @@ contract SocialToken is ISocialToken, Ownable, ERC20, ReentrancyGuard {
   /// @dev Withdraw earned funds from minting fees
   /// @notice Cannot withdraw the reserve funds
   function withdraw() external override onlyOwner nonReentrant {
-    IERC20 _collateral = collateral;
+    IERC20 _collateral = usdcCollateral;
     uint256 withdrawableFunds = _collateral.balanceOf(address(this)) - reserve;
     _collateral.safeTransfer(msg.sender, withdrawableFunds);
+  }
+
+  /// @dev update creator address
+  /// @notice Cannot set zero address
+  function updateCreator(address _creator) external override onlyOwner {
+    require(address(0) != _creator, "Invalid address");
+    creator = _creator;
   }
 
   //////////////////////////////
@@ -115,6 +137,7 @@ contract SocialToken is ISocialToken, Ownable, ERC20, ReentrancyGuard {
     uint256 _reserve = reserve;
     return _reserve - ((_reserve * newSupply * newSupply) / (supply * supply));
   }
+
 
   /// @dev Calculate creator's fee
   /// @param fee (uint256): Total fee from which to calculate creator's fee

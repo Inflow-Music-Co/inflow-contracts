@@ -7,9 +7,13 @@ import {
   SocialTokenFactory__factory,
   MockUSDC,
   MockUSDC__factory,
+  MockUSDT,
+  MockUSDT__factory
 } from "../typechain";
 
-describe("SocialTokenFactory Tests", () => {
+describe("SocialTokenFactory Tests", async function () {
+
+ this.timeout(2000000)
   let signers: Signer[],
     accounts: string[],
     admin: Signer,
@@ -17,7 +21,9 @@ describe("SocialTokenFactory Tests", () => {
     socialFactoryFactory: SocialTokenFactory__factory,
     socialFactory: SocialTokenFactory,
     usdcFactory: MockUSDC__factory,
-    usdc: MockUSDC;
+    usdc: MockUSDC,
+    usdtFactory:MockUSDT__factory,
+    usdt:MockUSDT;
   const AMOUNT = ethers.utils.parseEther("100");
 
   before(async () => {
@@ -28,32 +34,38 @@ describe("SocialTokenFactory Tests", () => {
         signers.map((signer) => signer.getAddress())
       );
       [adminAddress] = accounts;
-      [usdcFactory, socialFactoryFactory] = await Promise.all([
+      [usdcFactory,usdtFactory, socialFactoryFactory] = await Promise.all([
         ethers.getContractFactory(
           "MockUSDC",
           admin
         ) as Promise<MockUSDC__factory>,
         ethers.getContractFactory(
+            "MockUSDT",
+            admin
+          ) as Promise<MockUSDT__factory>,
+        ethers.getContractFactory(
           "SocialTokenFactory",
           admin
         ) as Promise<SocialTokenFactory__factory>,
       ]);
-      [usdc, socialFactory] = await Promise.all([
-        usdcFactory.deploy(),
-        socialFactoryFactory.deploy(),
+      [usdc,usdt, socialFactory] = await Promise.all([
+       await usdcFactory.deploy(),
+       await usdtFactory.deploy(),
+       await  socialFactoryFactory.deploy(),
       ]);
     } catch (err) {
       console.error(err);
     }
   });
 
-  it("creates social token contracts", async () => {
+  it(" 1 - creates social token contracts", async () => {
     try {
-      (await socialFactory.whitelist(adminAddress)).wait();
+      await (await socialFactory.whitelist(adminAddress)).wait()
       const socialTokenAddress = await getEventData(
-        socialFactory.create({
+      await socialFactory.create({
           creator: adminAddress,
-          collateral: usdc.address,
+          usdcCollateral : usdc.address,
+          usdtCollateral : usdt.address,
           maxSupply: ethers.utils.parseEther("10000000"),
           slope: ethers.utils.parseEther("1"),
           name: "name",
@@ -68,39 +80,43 @@ describe("SocialTokenFactory Tests", () => {
     }
   });
 
-  it("only whitelisted accounts can create social tokens", async () => {
+  it(" 2 - only whitelisted accounts can create social tokens", async () => {
     try {
-      await expect(
-        socialFactory.connect(signers[3]).create({
-          creator: adminAddress,
-          collateral: usdc.address,
-          maxSupply: ethers.utils.parseEther("10000000"),
-          slope: ethers.utils.parseEther("1"),
-          name: "name",
-          symbol: "SYMBOL",
-        })
-      ).to.be.reverted;
+      await expect(socialFactory.connect(signers[3]).callStatic.create({
+        creator: adminAddress,
+        usdcCollateral:usdc.address,
+        usdtCollateral:usdt.address,
+        maxSupply: ethers.utils.parseEther("10000000"),
+        slope: ethers.utils.parseEther("1"),
+        name: "name",
+        symbol: "SYMBOL",
+      })   
+      ).to.be.revertedWith("Whitelistable: whitelisted only");
     } catch (err) {
       console.error(err);
     }
   });
 
-  it("create tx reverts if token with creator already exists", async () => {
+  it(" 3 - create tx reverts if token with creator already exists", async () => {
     try {
+      await(await socialFactory.whitelist(accounts[2])).wait()
       await (
         await socialFactory.create({
-          creator: accounts[10],
-          collateral: usdc.address,
+          creator: accounts[2],
+          usdcCollateral:usdc.address,
+          usdtCollateral:usdt.address,
           maxSupply: ethers.utils.parseEther("10000000"),
           slope: ethers.utils.parseEther("1"),
           name: "name",
           symbol: "SYMBOL",
         })
       ).wait();
+
       await expect(
-        socialFactory.create({
-          creator: accounts[10],
-          collateral: usdc.address,
+        socialFactory.callStatic.create({
+          creator: accounts[2],
+          usdcCollateral:usdc.address,
+          usdtCollateral:usdt.address,
           maxSupply: ethers.utils.parseEther("10000000"),
           slope: ethers.utils.parseEther("1"),
           name: "name",
@@ -112,21 +128,25 @@ describe("SocialTokenFactory Tests", () => {
     }
   });
 
-  it("getToken returns created SocialToken address", async () => {
+  it(" 4 - getToken returns created SocialToken address", async () => {
     try {
+
+      await(await socialFactory.whitelist(accounts[4])).wait()
       const socialTokenAddressFromEvent = await getEventData(
-        socialFactory.create({
-          creator: accounts[15],
-          collateral: usdc.address,
+        socialFactory.connect(signers[4]).create({
+          creator: accounts[4],
+          usdcCollateral:usdc.address,
+          usdtCollateral:usdt.address,
           maxSupply: ethers.utils.parseEther("10000000"),
           slope: ethers.utils.parseEther("1"),
           name: "name",
           symbol: "SYMBOL",
         }),
-        0
+        0,
+        2
       );
       const socialTokenAddressFromMapping = await socialFactory.getToken(
-        accounts[15]
+        accounts[4]
       );
       expect(socialTokenAddressFromEvent).to.equal(
         socialTokenAddressFromMapping
@@ -136,11 +156,11 @@ describe("SocialTokenFactory Tests", () => {
     }
   });
 
-  it("getToken reverts if creator is the zero address", async () => {
+  it(" 5 - getToken reverts if creator is the zero address", async () => {
     try {
       await expect(
         socialFactory.getToken(utils.formatBytes32String("").slice(0, 42))
-      ).to.be.reverted;
+      ).to.be.revertedWith("SocialTokenFactory: getToken query for the zero address");
     } catch (err) {
       console.error(err);
     }

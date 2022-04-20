@@ -11,7 +11,9 @@ import {
   MockUSDC__factory,
 } from "../typechain";
 
-describe("Splitter Tests", () => {
+describe("Splitter Tests", async function () {
+  this.timeout(2000000)
+  const sleep = (waitTimeInMs: any) => new Promise(resolve => setTimeout(resolve, waitTimeInMs));
   let signers: Signer[],
     admin: Signer,
     payees: string[],
@@ -24,7 +26,7 @@ describe("Splitter Tests", () => {
   const PAYMENT = ethers.utils.parseEther("100"),
     SHARES = ethers.utils.parseEther(".5");
 
-  beforeEach(async () => {
+  beforeEach(async function () {
     try {
       signers = await ethers.getSigners();
       admin = signers[0];
@@ -42,15 +44,16 @@ describe("Splitter Tests", () => {
         ) as Promise<SplitterFactory__factory>,
       ]);
       [usdc, splitterFactory] = await Promise.all([
-        usdcFactory.deploy(),
-        splitterFactoryFactory.deploy(),
+        await usdcFactory.deploy(),
+        await splitterFactoryFactory.deploy(),
       ]);
       const [splitterAddress] = await getTxEventData(
         splitterFactory
           .connect(signers[1])
           .create(usdc.address, payees, [SHARES, SHARES, SHARES]),
         "SplitterCreated(address, address)",
-        splitterFactory.interface
+        splitterFactory.interface,
+        5
       );
       splitter = new Contract(
         splitterAddress,
@@ -62,7 +65,7 @@ describe("Splitter Tests", () => {
     }
   });
 
-  it("returns shares by payee", async () => {
+  it(" 1 - returns shares by payee", async () => {
     try {
       payees.forEach(async (payee) => {
         expect(await splitter.shares(payee)).to.equal(SHARES);
@@ -72,7 +75,7 @@ describe("Splitter Tests", () => {
     }
   });
 
-  it("returns total shares outstanding", async () => {
+  it(" 2 - returns total shares outstanding", async () => {
     try {
       expect(await splitter.totalShares()).to.equal(SHARES.mul(3));
     } catch (err) {
@@ -80,21 +83,12 @@ describe("Splitter Tests", () => {
     }
   });
 
-  it("releases individual payments", async () => {
-    try {
-      await (await usdc.mintTo(splitter.address, PAYMENT)).wait();
-      payees.forEach(async (payee) => {
-        await (await splitter.release(payee)).wait();
-        expect(await usdc.balanceOf(payee)).to.equal(PAYMENT.div(3));
-      });
-    } catch (err) {
-      console.error(err);
-    }
-  });
 
-  it("batch releases payments", async () => {
+  it(" 3 - batch releases payments", async () => {
+    await sleep(10000)
     try {
       await (await usdc.mintTo(splitter.address, PAYMENT)).wait();
+      await sleep(10000)
       await (await splitter.batchRelease(payees)).wait();
       payees.forEach(async (payee) => {
         expect(await usdc.balanceOf(payee)).to.equal(PAYMENT.div(3));
@@ -104,7 +98,7 @@ describe("Splitter Tests", () => {
     }
   });
 
-  it("returns total released", async () => {
+  it(" 4 - returns total released", async () => {
     try {
       await (await usdc.mintTo(splitter.address, PAYMENT)).wait();
       await (await splitter.batchRelease(payees)).wait();
@@ -114,7 +108,7 @@ describe("Splitter Tests", () => {
     }
   });
 
-  it("returns payee at index in payees array", async () => {
+  it(" 5 - returns payee at index in payees array", async () => {
     try {
       payees.forEach(async (payee, i) => {
         expect(await splitter.payee(i)).to.equal(payee);
@@ -124,7 +118,7 @@ describe("Splitter Tests", () => {
     }
   });
 
-  it("returns each payee's released amount", async () => {
+  it(" 6 - returns each payee's released amount", async () => {
     try {
       await (await usdc.mintTo(splitter.address, PAYMENT)).wait();
       await (await splitter.batchRelease(payees)).wait();
@@ -135,4 +129,19 @@ describe("Splitter Tests", () => {
       console.error(err);
     }
   });
+
+  it(" 7 - releases individual payments", async () => {
+    try {
+      await (await usdc.mintTo(splitter.address, PAYMENT)).wait();
+        payees.forEach(async (payee) => {
+        await sleep(5000)
+        await (await splitter.release(payee)).wait();
+        await sleep(5000)
+        expect(await usdc.balanceOf(payee)).to.equal(PAYMENT.div(3));
+      });
+    }catch (err) {
+      console.error(err);
+    }
+  });
+
 });
