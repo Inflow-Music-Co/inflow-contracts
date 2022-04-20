@@ -13,7 +13,7 @@ const config: HardhatUserConfig = {
   networks: {
     hardhat: {
       forking: {
-        url: "https://polygon-mainnet.g.alchemy.com/v2/VCxmFXYm1xVreMCetqxlmauONTMRMMPu",
+        url: "<API KEY>",
         blockNumber: 12400000,
       },
     },
@@ -27,7 +27,7 @@ const config: HardhatUserConfig = {
     // },
   // },
   rinkeby: {
-    url: "https://eth-rinkeby.alchemyapi.io/v2/ISnePXFV9Trh4rAs9xhN68ICYuGsEJe0",
+    url: "<API KEY>",
     accounts: [
      process.env.DEV_PRIVATE_KEY1 as string,
      process.env.DEV_PRIVATE_KEY2 as string,
