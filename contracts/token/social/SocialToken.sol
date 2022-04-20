@@ -41,7 +41,7 @@ contract SocialToken is ISocialToken, Ownable, ERC20, ReentrancyGuard {
   ////////////////////////////////
 
   /// @dev Mint tokens
-  /// @param amount (uint256): Amount to mint
+  /// @param amount (uint256, address): Amount to mint and colleteral address
   function mint(uint256 amount, address collateralAddress) external override nonReentrant {
     require(amount > 0, "SocialToken: amount is zero");
     uint256 mintPrice = getMintPrice(amount);
