@@ -11,8 +11,9 @@ import {
   MockUSDC__factory,
 } from "../typechain";
 
-describe("Splitter Tests", () => {
-    const sleep = (waitTimeInMs: any) => new Promise(resolve => setTimeout(resolve, waitTimeInMs));
+describe("Splitter Tests", async function () {
+  this.timeout(2000000)
+  const sleep = (waitTimeInMs: any) => new Promise(resolve => setTimeout(resolve, waitTimeInMs));
   let signers: Signer[],
     admin: Signer,
     payees: string[],
@@ -26,7 +27,6 @@ describe("Splitter Tests", () => {
     SHARES = ethers.utils.parseEther(".5");
 
   beforeEach(async function () {
-      this.timeout(1200000)
     try {
       signers = await ethers.getSigners();
       admin = signers[0];
@@ -73,7 +73,7 @@ describe("Splitter Tests", () => {
     } catch (err) {
       console.error(err);
     }
-  }).timeout(120000);
+  });
 
   it(" 2 - returns total shares outstanding", async () => {
     try {
@@ -81,28 +81,10 @@ describe("Splitter Tests", () => {
     } catch (err) {
       console.error(err);
     }
-  }).timeout(120000);
+  });
 
-//   it(" 3 - releases individual payments", async () => {
-//         try {
-//           console.log("started...");
-//           await (await usdc.mintTo(splitter.address, PAYMENT)).wait();
-//           console.log("loop...");
-//           await sleep(10000)
-//             payees.forEach(async (payee) => {
-//             console.log("inside loop...");
-//             await sleep(10000)
-//             await (await splitter.release(payee)).wait();
-//             await sleep(10000)
-//             expect(await usdc.balanceOf(payee)).to.equal(PAYMENT.div(3));
-//             console.log("End loop...");
-//           });
-//         }catch (err) {
-//           console.error(err);
-//         }
-//       }).timeout(120000);
 
-  it(" 4 - batch releases payments", async () => {
+  it(" 3 - batch releases payments", async () => {
     await sleep(10000)
     try {
       await (await usdc.mintTo(splitter.address, PAYMENT)).wait();
@@ -114,9 +96,9 @@ describe("Splitter Tests", () => {
     } catch (err) {
       console.error(err);
     }
-  }).timeout(120000);
+  });
 
-  it(" 5 - returns total released", async () => {
+  it(" 4 - returns total released", async () => {
     try {
       await (await usdc.mintTo(splitter.address, PAYMENT)).wait();
       await (await splitter.batchRelease(payees)).wait();
@@ -124,9 +106,9 @@ describe("Splitter Tests", () => {
     } catch (err) {
       console.error(err);
     }
-  }).timeout(120000);
+  });
 
-  it(" 6 - returns payee at index in payees array", async () => {
+  it(" 5 - returns payee at index in payees array", async () => {
     try {
       payees.forEach(async (payee, i) => {
         expect(await splitter.payee(i)).to.equal(payee);
@@ -134,9 +116,9 @@ describe("Splitter Tests", () => {
     } catch (err) {
       console.error(err);
     }
-  }).timeout(120000);
+  });
 
-  it(" 7 - returns each payee's released amount", async () => {
+  it(" 6 - returns each payee's released amount", async () => {
     try {
       await (await usdc.mintTo(splitter.address, PAYMENT)).wait();
       await (await splitter.batchRelease(payees)).wait();
@@ -146,6 +128,20 @@ describe("Splitter Tests", () => {
     } catch (err) {
       console.error(err);
     }
-  }).timeout(120000);
+  });
 
-}).timeout(120000);
+  it(" 7 - releases individual payments", async () => {
+    try {
+      await (await usdc.mintTo(splitter.address, PAYMENT)).wait();
+        payees.forEach(async (payee) => {
+        await sleep(5000)
+        await (await splitter.release(payee)).wait();
+        await sleep(5000)
+        expect(await usdc.balanceOf(payee)).to.equal(PAYMENT.div(3));
+      });
+    }catch (err) {
+      console.error(err);
+    }
+  });
+
+});

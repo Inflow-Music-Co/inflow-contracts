@@ -13,7 +13,7 @@ import {
 
 describe("SocialTokenFactory Tests", async function () {
 
- this.timeout(12000000000000)
+ this.timeout(2000000)
   let signers: Signer[],
     accounts: string[],
     admin: Signer,
@@ -58,11 +58,11 @@ describe("SocialTokenFactory Tests", async function () {
     }
   });
 
-  it("creates social token contracts", async () => {
+  it(" 1 - creates social token contracts", async () => {
     try {
-      (await socialFactory.whitelist(adminAddress)).wait();
+      await (await socialFactory.whitelist(adminAddress)).wait()
       const socialTokenAddress = await getEventData(
-        socialFactory.create({
+      await socialFactory.create({
           creator: adminAddress,
           usdcCollateral : usdc.address,
           usdtCollateral : usdt.address,
@@ -80,29 +80,29 @@ describe("SocialTokenFactory Tests", async function () {
     }
   });
 
-  it("only whitelisted accounts can create social tokens", async () => {
+  it(" 2 - only whitelisted accounts can create social tokens", async () => {
     try {
-      await expect(
-        socialFactory.connect(signers[3]).create({
-          creator: adminAddress,
-          usdcCollateral:usdc.address,
-          usdtCollateral:usdt.address,
-          maxSupply: ethers.utils.parseEther("10000000"),
-          slope: ethers.utils.parseEther("1"),
-          name: "name",
-          symbol: "SYMBOL",
-        })
-      ).to.be.reverted;
+      await expect(socialFactory.connect(signers[3]).callStatic.create({
+        creator: adminAddress,
+        usdcCollateral:usdc.address,
+        usdtCollateral:usdt.address,
+        maxSupply: ethers.utils.parseEther("10000000"),
+        slope: ethers.utils.parseEther("1"),
+        name: "name",
+        symbol: "SYMBOL",
+      })   
+      ).to.be.revertedWith("Whitelistable: whitelisted only");
     } catch (err) {
       console.error(err);
     }
   });
 
-  it("create tx reverts if token with creator already exists", async () => {
+  it(" 3 - create tx reverts if token with creator already exists", async () => {
     try {
+      await(await socialFactory.whitelist(accounts[2])).wait()
       await (
         await socialFactory.create({
-          creator: accounts[10],
+          creator: accounts[2],
           usdcCollateral:usdc.address,
           usdtCollateral:usdt.address,
           maxSupply: ethers.utils.parseEther("10000000"),
@@ -111,9 +111,10 @@ describe("SocialTokenFactory Tests", async function () {
           symbol: "SYMBOL",
         })
       ).wait();
+
       await expect(
-        socialFactory.create({
-          creator: accounts[10],
+        socialFactory.callStatic.create({
+          creator: accounts[2],
           usdcCollateral:usdc.address,
           usdtCollateral:usdt.address,
           maxSupply: ethers.utils.parseEther("10000000"),
@@ -127,11 +128,13 @@ describe("SocialTokenFactory Tests", async function () {
     }
   });
 
-  it("getToken returns created SocialToken address", async () => {
+  it(" 4 - getToken returns created SocialToken address", async () => {
     try {
+
+      await(await socialFactory.whitelist(accounts[4])).wait()
       const socialTokenAddressFromEvent = await getEventData(
-        socialFactory.create({
-          creator: accounts[15],
+        socialFactory.connect(signers[4]).create({
+          creator: accounts[4],
           usdcCollateral:usdc.address,
           usdtCollateral:usdt.address,
           maxSupply: ethers.utils.parseEther("10000000"),
@@ -139,10 +142,11 @@ describe("SocialTokenFactory Tests", async function () {
           name: "name",
           symbol: "SYMBOL",
         }),
-        0
+        0,
+        2
       );
       const socialTokenAddressFromMapping = await socialFactory.getToken(
-        accounts[15]
+        accounts[4]
       );
       expect(socialTokenAddressFromEvent).to.equal(
         socialTokenAddressFromMapping
@@ -152,11 +156,11 @@ describe("SocialTokenFactory Tests", async function () {
     }
   });
 
-  it("getToken reverts if creator is the zero address", async () => {
+  it(" 5 - getToken reverts if creator is the zero address", async () => {
     try {
       await expect(
         socialFactory.getToken(utils.formatBytes32String("").slice(0, 42))
-      ).to.be.reverted;
+      ).to.be.revertedWith("SocialTokenFactory: getToken query for the zero address");
     } catch (err) {
       console.error(err);
     }

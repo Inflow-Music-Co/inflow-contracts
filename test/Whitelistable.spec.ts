@@ -5,9 +5,10 @@ import { Signer } from "ethers";
 import { getTxEventData } from "./utils";
 import { Whitelistable__factory, Whitelistable } from "../typechain";
 
-describe("Whitelistable Tests", () => {
-const sleep = (waitTimeInMs: any) => new Promise(resolve => setTimeout(resolve, waitTimeInMs));
-  let signers: Signer[],
+describe("Whitelistable Tests", async function (){
+   this.timeout(2000000)
+   const sleep = (waitTimeInMs: any) => new Promise(resolve => setTimeout(resolve, waitTimeInMs));
+   let signers: Signer[],
     accounts: string[],
     whitelistableFactory: Whitelistable__factory,
     whitelistable: Whitelistable,
@@ -39,7 +40,7 @@ const sleep = (waitTimeInMs: any) => new Promise(resolve => setTimeout(resolve, 
     } catch (err) {
       console.error(err);
     }
-  }).timeout(120000);
+  });
 
   it(" 2 - unwhitelists accounts", async () => {
     try {
@@ -50,34 +51,34 @@ const sleep = (waitTimeInMs: any) => new Promise(resolve => setTimeout(resolve, 
     } catch (err) {
       console.error(err);
     }
-  }).timeout(12000000);
+  });
 
   it(" 3 - only owner can enable whitelist", async () => {
     try {
-      await expect((await (whitelistableInvalidOwner.setWhitelistEnabled(true))).wait()).to.be
+      await expect(whitelistableInvalidOwner.callStatic.setWhitelistEnabled(true)).to.be
         .reverted;
     } catch (err) {
       console.error(err);
     }
-  }).timeout(120000);
+  });
 
   it(" 4 - only owner can whitelist accounts", async () => {
     try {
-      await expect((await (whitelistableInvalidOwner.whitelist(accounts[3]))).wait()).to.be
+      await expect(whitelistableInvalidOwner.callStatic.whitelist(accounts[3])).to.be
         .reverted;
     } catch (err) {
       console.error(err);
     }
-  }).timeout(120000);
+  });
 
   it(" 5 - only owner can make unwhitelist accounts", async () => {
     try {
-      await expect((await (whitelistableInvalidOwner.unwhitelist(accounts[3]))).wait()).to.be
+      await expect((whitelistableInvalidOwner.callStatic.unwhitelist(accounts[3]))).to.be
         .reverted;
     } catch (err) {
       console.error(err);
     }
-  }).timeout(120000);
+  });
 
   it(" 6 - successful whitelist transactions emit Whitelisted event", async () => {
     try {
@@ -92,7 +93,7 @@ const sleep = (waitTimeInMs: any) => new Promise(resolve => setTimeout(resolve, 
     } catch (err) {
       console.error(err);
     }
-  }).timeout(120000);
+  });
 
   it(" 7 - unsuccessful whitelist transactions do not emit Whitelisted event", async () => {
     try {
@@ -105,9 +106,9 @@ const sleep = (waitTimeInMs: any) => new Promise(resolve => setTimeout(resolve, 
     } catch (err) {
       console.error(err);
     }
-  }).timeout(900000);
+  });
 
-  it("8 - successful unwhitelist transactions emit Unwhitelisted event", async () => {
+  it(" 8 - successful unwhitelist transactions emit Unwhitelisted event", async () => {
     try {
       await (await whitelistable.whitelist(accounts[4])).wait();
       const eventData = await getTxEventData(
@@ -121,7 +122,7 @@ const sleep = (waitTimeInMs: any) => new Promise(resolve => setTimeout(resolve, 
     } catch (err) {
       console.error(err);
     }
-  }).timeout(120000);
+  });
 
   it(" 9 - unsuccessful unwhitelist transactions do not emit Unwhitelisted event", async () => {
     try {
@@ -130,5 +131,5 @@ const sleep = (waitTimeInMs: any) => new Promise(resolve => setTimeout(resolve, 
     } catch (err) {
       console.error(err);
     }
-  }).timeout(120000);
-}).timeout(120000);
+  });
+});

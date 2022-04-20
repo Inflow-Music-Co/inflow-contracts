@@ -5,7 +5,8 @@ import { expect } from "chai";
 import { getTxEventData, formatCreators, Part } from "./utils";
 import { Inflow721, Inflow721__factory } from "../typechain";
 
-describe("Inflow721 Tests", () => {
+describe("Inflow721 Tests", async function (){
+  this.timeout(2000000)
   const sleep = (waitTimeInMs: any) => new Promise(resolve => setTimeout(resolve, waitTimeInMs));
   let signers: Signer[],
     admin: Signer,
@@ -13,12 +14,11 @@ describe("Inflow721 Tests", () => {
     inflowFactory: Inflow721__factory,
     inflow: Inflow721,
     inflowMinter: Inflow721;
-  const OLD_BASE_URI = "https://ipfs.io/ipfs/",
+    const OLD_BASE_URI = "https://ipfs.io/ipfs/",
     NEW_BASE_URI = "ipfs.io/ipfs/",
     URI = "TEST_URI";
 
   before(async function() {
-    this.timeout(1200000)
     try {
       signers = await ethers.getSigners();
       [admin] = signers;
@@ -30,7 +30,7 @@ describe("Inflow721 Tests", () => {
         admin
       )) as Inflow721__factory;
       inflow = await inflowFactory.deploy();
-      (await inflow.whitelist(accounts[1])).wait();
+      await(await inflow.whitelist(accounts[1])).wait();
       inflowMinter = inflow.connect(signers[1]);
     } catch (err) {
       console.error(err);
@@ -38,7 +38,6 @@ describe("Inflow721 Tests", () => {
   });
 
   it(" 1 - mints tokens",async function() {
-    this.timeout(100000)
     try {
       const tokenId = await mint(
         inflowMinter,
@@ -55,14 +54,14 @@ describe("Inflow721 Tests", () => {
   it(" 2 - only mints with whitelisted accounts", async () => {
     try {  
       await expect(
-          (await ( inflow.connect(signers[3])
+          (inflow.connect(signers[3]).callStatic
             .mint(NEW_BASE_URI,
-            formatCreators(accounts.slice(0, 3))))).wait()
+            formatCreators(accounts.slice(0, 3))))
           ).to.be.reverted;
     } catch (err) {
       console.error(err);
     }
-  }).timeout(120000);
+  })
 
 
 
@@ -78,7 +77,7 @@ it(" 3 - updates base uri", async () => {
     } catch (err) {
       console.error(err);
     }
-  }).timeout(120000);
+  })
   
 
   it(" 4 - disables whitelist to mint with non-whitelisted accounts", async () => {
@@ -91,7 +90,7 @@ it(" 3 - updates base uri", async () => {
       formatCreators(accounts.slice(0, 3))
     );
     expect(await inflow.ownerOf(tokenId)).to.equal(accounts[idx]);
-  }).timeout(1200000);
+  })
 
 
   it(" 5 - implements raribleV2 royalties", async () => {
@@ -119,22 +118,22 @@ it(" 3 - updates base uri", async () => {
     } catch (err) {
       console.error(err);
     }
-  }).timeout(120000);
+  })
 
   it(" 6 - royalty account must be msg.sender to update royalty account", async () => {
     try {
       const royalties = formatCreators(accounts.slice(0, 3));
       const tokenId = await mint(inflowMinter, URI, royalties);
-      expect((inflow.updateRoyaltyAccount(tokenId, accounts[7], accounts[0]))).to.be.reverted;
+      expect((inflow.callStatic.updateRoyaltyAccount(tokenId, accounts[7], accounts[0]))).to.be.reverted;
     } catch (err) {
       console.error(err);
     }
-  }).timeout(120000);
+  })
 
   it(" 7 - royalties length must be <= 16", async () => {
     try {
       const royalties = formatCreators(accounts.slice(0, 17));
-      expect(inflow.mint(URI, royalties)).to.be.revertedWith;
+      expect(inflow.callStatic.mint(URI, royalties)).to.be.reverted;
     } catch (err) {
       console.error(err);
     }
@@ -148,12 +147,13 @@ it(" 3 - updates base uri", async () => {
       );
       expect(await inflow.ownerOf(tokenId)).to.equal(accounts[1]);
       await(await inflowMinter.burn(tokenId)).wait();
-      expect(inflow.ownerOf(tokenId)).to.be.revertedWith;
+      expect(inflow.ownerOf(tokenId)).to.be.reverted;
     } catch (err) {
       console.error(err);
     }
-  }).timeout(120000);
-}).timeout(120000);
+  });
+
+})
 
 async function mint(inflow: Inflow721,uri: string,royalties: Part[]): Promise<BigNumber> {
   const [_, __, tokenId] = await getTxEventData(
