@@ -254,6 +254,14 @@
 //     }
 //   });
 
+//   it("Should emit MintedData",async () => { 
+//     try{ 
+//         expect(mint(socialMinter, usdcMinter, AMOUNT)).to.emit(social,"Minted").withArgs(AMOUNT,usdc.address); 
+//     }catch(err){ 
+//         console.error(err); 
+//     } 
+//   }) 
+
 
 // });
 
