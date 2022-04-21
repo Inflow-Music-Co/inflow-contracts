@@ -90,6 +90,7 @@
 //       expect(await social.balanceOf(minterAddress)).to.equal(AMOUNT);
 //       expect(await usdc.balanceOf(minterAddress)).to.equal(0);
 //       expect(await usdt.balanceOf(minterAddress)).to.equal(0);
+//       expect(mint(socialMinter, usdcMinter, AMOUNT)).to.emit(social,"Minted").withArgs(AMOUNT,usdc.address)
 //     } catch (err) {
 //       console.error(err);
 //     }
@@ -254,10 +255,15 @@
 //     }
 //   });
 
+//   it("Should emit MintedData",async () => {
+//     try{
+//         expect(mint(socialMinter, usdcMinter, AMOUNT)).to.emit(social,"Minted").withArgs(AMOUNT,usdc.address);
+//     }catch(err){
+//         console.error(err);
+//     }
+//   })
 
 // });
-
-
 
 // async function mint(
 //     social: SocialToken,
