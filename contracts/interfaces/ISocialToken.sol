@@ -16,16 +16,18 @@ interface ISocialToken is IERC20 {
 
     event Minted(
         address indexed minter,
-        uint256 indexed amount,
+        address indexed tokenAddress,
         uint256 indexed mintPrice,
+        uint256 amount,
         uint256 tokenSupply,
         uint256 royaltyPaid,
         uint256 reserve
     );
     event Burned(
         address indexed burner,
-        uint256 indexed amount,
+        address indexed tokenAddress,
         uint256 indexed burnPrice,
+        uint256 amount,
         uint256 tokenSupply,
         uint256 reserve
     );

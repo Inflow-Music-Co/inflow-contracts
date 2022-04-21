@@ -62,8 +62,9 @@ contract SocialToken is ISocialToken, Ownable, ERC20, ReentrancyGuard {
     _collateral.safeTransfer(owner(), fee - creatorFee);
     emit Minted(
       msg.sender,
-      amount,
+      address(this),
       mintPrice,
+      amount,
       supply + amount,
       creatorFee,
       reserve
@@ -87,7 +88,7 @@ contract SocialToken is ISocialToken, Ownable, ERC20, ReentrancyGuard {
     }else{
       usdcCollateral.safeTransfer(msg.sender, burnPrice);
     }
-    emit Burned(msg.sender, amount, burnPrice, supply - amount, reserve);
+    emit Burned(msg.sender,address(this), burnPrice, amount, supply - amount, reserve);
   }
 
   ////////////////////////////////
