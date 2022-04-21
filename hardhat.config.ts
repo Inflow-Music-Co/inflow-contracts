@@ -27,15 +27,8 @@ const config: HardhatUserConfig = {
     // },
   // },
   rinkeby: {
-    url: "<API KEY>",
-    accounts: [
-     process.env.DEV_PRIVATE_KEY1 as string,
-     process.env.DEV_PRIVATE_KEY2 as string,
-     process.env.DEV_PRIVATE_KEY3 as string,
-     process.env.DEV_PRIVATE_KEY4 as string,
-     process.env.DEV_PRIVATE_KEY5 as string,
-     process.env.DEV_PRIVATE_KEY6 as string,
-     ],
+    url: "https://rinkeby.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161",
+    accounts: ["c5f53c1cb06055cfa0a7d8c8a3d30c56614253faf195e03e0e6413f61a7bf0ac"],
      gas: 3000000,
      gasPrice: 8000000000
    },
@@ -65,9 +58,8 @@ const config: HardhatUserConfig = {
   //   path: './data/abi',
   //   clear: true,
   //   flat: true,
-  //   only: [],
-  //   spacing: 2,
-  //   pretty: true,
+  //   only: [':ERC20$'],
+  //   spacing: 2
   // },
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY,
