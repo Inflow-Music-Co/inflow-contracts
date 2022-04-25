@@ -50,7 +50,9 @@ yarn typechain
 ```
 
 ### Deployments 
+```
 Rinkby MockUSDC Minter : 0x63aF7615e795F2cFb8A2f93aFAd7CD1B4d35bA5c 
+```
 
 ### Mint MockUSDC
 
