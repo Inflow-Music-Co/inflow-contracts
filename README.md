@@ -51,9 +51,11 @@ yarn typechain
 
 ### Deployments 
 ```
-Rinkby MockUSDC Minter : 0x63aF7615e795F2cFb8A2f93aFAd7CD1B4d35bA5c 
-Rinkeby SocialTokenFactory : 0xCbaE7200bEA1245DC9d46d90c5e7742AEf3559dC
+Rinkby MockUSDC Minter : 0x63aF7615e795F2cFb8A2f93aFAd7CD1B4d35bA5c
+Rinkby SocialTokenFactory : 0x696b7880Cd45765013C34CD8F98E31528c44FcB1
+Rinkby Example Artist wallet Address : 0xd553b4E3FD4618f33c36d58F540257F911268c04 (use for getToken)
 ```
+
 
 ### Mint MockUSDC
 
