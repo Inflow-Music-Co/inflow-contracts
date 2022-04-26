@@ -6,7 +6,8 @@ import "hardhat-gas-reporter";
 import "@nomiclabs/hardhat-etherscan";
 import { HardhatUserConfig } from "hardhat/config";
 require("dotenv").config();
-require("hardhat-abi-exporter");
+require('hardhat-abi-exporter');
+​
 const config: HardhatUserConfig = {
   defaultNetwork: "rinkeby",
   networks: {
@@ -24,14 +25,21 @@ const config: HardhatUserConfig = {
     //   url: "https://rpc-mumbai.maticvigil.com",
     //   // accounts: [process.env.DEV_PRIVATE_KEY as string],
     // },
-    // },
-    rinkeby: {
-      url: process.env.INFURA_API_KEY,
-      accounts: [process.env.DEV_PRIVATE_KEY as string],
-      gas: 3000000,
-      gasPrice: 8000000000,
-    },
-  },
+  // },
+  rinkeby: {
+    url: "<API KEY>",
+    accounts: [
+     process.env.DEV_PRIVATE_KEY1 as string,
+     process.env.DEV_PRIVATE_KEY2 as string,
+     process.env.DEV_PRIVATE_KEY3 as string,
+     process.env.DEV_PRIVATE_KEY4 as string,
+     process.env.DEV_PRIVATE_KEY5 as string,
+     process.env.DEV_PRIVATE_KEY6 as string,
+     ],
+     gas: 3000000,
+     gasPrice: 8000000000
+   },
+},
   solidity: {
     compilers: [
       {
@@ -64,5 +72,7 @@ const config: HardhatUserConfig = {
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY,
   },
+  
 };
+​
 export default config;
