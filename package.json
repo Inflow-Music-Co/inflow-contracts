@@ -19,8 +19,7 @@
     "test-clean": "yarn clean && yarn test",
     "test-fast": "TS_NODE_TRANSPILE_ONLY=1 hardhat test test/*.ts",
     "typechain": "hardhat typechain",
-    "mint": "hardhat test --network rinkeby ./test/mint.js",
-    "scripts": "hardhat test --network rinkeby scripts/*.ts"
+    "mint": "hardhat test --network rinkeby ./test/mint.js"
   },
   "license": "MIT",
   "devDependencies": {
