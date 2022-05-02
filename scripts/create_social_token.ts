@@ -1,14 +1,14 @@
 import { ethers } from "hardhat";
 
-const factoryAddress = "0x22b4708F2081dB7965aaD432bA2A0405be6055e0";
+const factoryAddress = "0x5c1e4da1d1DC1123b6E6331259dBb41c7cb69F47";
 const mintParams = {
-    creator: "0x4A83b8CDC54a01A0ceB258B7b7E92b6eDD12Cd70",
+    creator: "0x2E8992A98d58C3CA3b54e8042fF14be36Cc98dB1",
     usdcCollateral:"0x63aF7615e795F2cFb8A2f93aFAd7CD1B4d35bA5c",
     usdtCollateral: "0x63aF7615e795F2cFb8A2f93aFAd7CD1B4d35bA5c",
-    maxSupply:"100000000000000000000",
-    slope:"1000000000000000000000",
-    name: "gida3sn2",
-    symbol: "GId3N2"
+    maxSupply:"10000000000000000000000000",
+    slope:"500000000000000000",
+    name: "luke",
+    symbol: "LUKE"
 }
 
 

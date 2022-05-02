@@ -1,6 +1,6 @@
 import { ethers } from "hardhat";
 
-const tokenAddress = "0xF4a787203fA30185F99D768E0cf43d863A103Cde";
+const tokenAddress = "0x2FFc139D8Dc7e8228d904c04cbFaDe6923eaef7b";
 const MockUSDC = "0x63aF7615e795F2cFb8A2f93aFAd7CD1B4d35bA5c"
 
 async function approveMockUSD(): Promise<void>{
