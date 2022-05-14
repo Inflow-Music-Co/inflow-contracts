@@ -20,4 +20,4 @@ async function mintSocialToken(amount: string): Promise<void> {
   console.log("mint", mint);
 }
 
-mintSocialToken("200000000000");
+mintSocialToken("10");
