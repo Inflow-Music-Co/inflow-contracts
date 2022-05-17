@@ -55,6 +55,10 @@ Rinkby MockUSDC Minter : 0x63aF7615e795F2cFb8A2f93aFAd7CD1B4d35bA5c
 Rinkby SocialTokenFactory : 0x0075c7aaa1D50857Dd5d293590d105f378A6f5Ff
 Rinkby Example Artist wallet Address : 0x1362133CC1c49f4dEcddCAE3e8fBD7b72F17106f (use for getToken)
 ```
+### Deployer Account (admin)
+```
+0x16808b32761e4c3fc68d2ceae2f9b54bf59326cc
+```
 
 
 ### Mint MockUSDC
