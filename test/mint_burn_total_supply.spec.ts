@@ -1,11 +1,13 @@
 import { ethers } from "hardhat";
 
+import { SLOPE } from "../constants";
+
 const factoryAddress = "0x41C659319885598d77CF5bd8E792A5162bC72A04";
 const mintParams = {
-  creator: "0x1AC2BE6EF85D596EA5c65ec87A6eB9fd77a606DF",
+  creator: "0x09C1cA8211e107BA4089de25Aa5c65cF486ef1C6",
   usdcCollateral: "0x63aF7615e795F2cFb8A2f93aFAd7CD1B4d35bA5c",
   usdtCollateral: "0xb34Ca2cDE88dE520E4Be8b1ccEc374D3052ae021",
-  slope: ethers.utils.parseEther("0.0005").toString(),
+  slope: ethers.utils.parseEther(SLOPE).toString(),
   maxSupply: ethers.utils.parseEther("10000000").toString(),
   name: "test_artist_7",
   symbol: "TESTARTIST",
@@ -15,7 +17,7 @@ describe("Mint and Burn total supply", async () => {
   let token = "";
   let signers: any;
   before(async () => {
-    const whiteAddress = "0x1AC2BE6EF85D596EA5c65ec87A6eB9fd77a606DF";
+    const whiteAddress = "0x09C1cA8211e107BA4089de25Aa5c65cF486ef1C6";
     signers = await ethers.getSigners();
 
     const [owner] = await ethers.getSigners();
