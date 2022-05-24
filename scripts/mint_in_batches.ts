@@ -17,12 +17,12 @@ const csvWriter = createCsvWriter({
 
 const factoryAddress = "0x41C659319885598d77CF5bd8E792A5162bC72A04";
 const mintParams = {
-  creator: "0x7D1D444A016FaFB601C27bC1bE4678D9D7871E86",
+  creator: "0x4FB14Ade0Bd8D8bF9C41ec648A20D4b3C43EB78c",
   usdcCollateral: "0x63aF7615e795F2cFb8A2f93aFAd7CD1B4d35bA5c",
   usdtCollateral: "0xb34Ca2cDE88dE520E4Be8b1ccEc374D3052ae021",
   slope: ethers.utils.parseEther(SLOPE).toString(),
   maxSupply: ethers.utils.parseEther("10000000").toString(),
-  name: "test_artist_32",
+  name: "test_artist_41",
   symbol: "TESTARTIST",
 };
 
@@ -36,7 +36,7 @@ const prices: {
 }[] = [];
 
 async function createSocialToken() {
-  const whiteAddress = "0x7D1D444A016FaFB601C27bC1bE4678D9D7871E86";
+  const whiteAddress = "0x4FB14Ade0Bd8D8bF9C41ec648A20D4b3C43EB78c";
   signers = await ethers.getSigners();
 
   const [owner] = await ethers.getSigners();
@@ -61,7 +61,8 @@ async function createSocialToken() {
   return token;
 }
 
-let initialAmount = 1;
+let initialAmount = 10;
+let remainingSupply = 10000000;
 
 async function mintInBatch(max: number) {
   await createSocialToken();
@@ -77,7 +78,9 @@ async function mintInBatch(max: number) {
   );
 
   let i = 0;
-  while (i < max) {
+  while (i < max && remainingSupply > 0) {
+    if (initialAmount > remainingSupply) initialAmount = remainingSupply;
+
     const amountOne = ethers.utils.parseEther("1").toString();
     const priceOne = await socialToken.getMintPrice(amountOne);
     const priceOneInUsdc = ethers.utils.formatUnits(priceOne, 6);
@@ -103,6 +106,10 @@ async function mintInBatch(max: number) {
 
     let supply: any = await socialTokenMinter.totalSupply();
     supply = ethers.utils.formatEther(supply);
+    remainingSupply = remainingSupply - initialAmount;
+
+    console.info("remainingSupply", remainingSupply);
+    console.info("initialAmount", initialAmount);
 
     prices.push({
       supply,
@@ -124,7 +131,7 @@ async function mintInBatch(max: number) {
     });
 }
 
-mintInBatch(5)
+mintInBatch(10)
   .then(async () => {
     console.log("Successfully minted");
   })
