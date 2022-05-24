@@ -1,16 +1,6 @@
-Date,Price
-Tue May 24 2022 00:58:14 GMT+0400 (Armenia Standard Time),25.0
-Tue May 24 2022 00:58:43 GMT+0400 (Armenia Standard Time),63.75
-Tue May 24 2022 00:59:12 GMT+0400 (Armenia Standard Time),94.296875
-Tue May 24 2022 00:59:40 GMT+0400 (Armenia Standard Time),121.014323
-Tue May 24 2022 01:00:13 GMT+0400 (Armenia Standard Time),145.37926
-Tue May 24 2022 01:00:41 GMT+0400 (Armenia Standard Time),168.090731
-Tue May 24 2022 01:01:10 GMT+0400 (Armenia Standard Time),189.547768
-Tue May 24 2022 01:01:42 GMT+0400 (Armenia Standard Time),210.005239
-Tue May 24 2022 01:02:11 GMT+0400 (Armenia Standard Time),229.638541
-Tue May 24 2022 01:02:43 GMT+0400 (Armenia Standard Time),248.574966
-Tue May 24 2022 01:03:10 GMT+0400 (Armenia Standard Time),266.91064
-Tue May 24 2022 01:03:42 GMT+0400 (Armenia Standard Time),284.720439
-Tue May 24 2022 01:04:11 GMT+0400 (Armenia Standard Time),302.064143
-Tue May 24 2022 01:04:43 GMT+0400 (Armenia Standard Time),318.99046
-Tue May 24 2022 01:05:11 GMT+0400 (Armenia Standard Time),335.539747
+Supply,Amount,Unit Price,Total Price
+1.0,1,0.000025,0.000025
+11.0,10,0.000066,0.00264
+111.0,100,0.00043,0.228472
+1111.0,1000,0.003555,19.485747
+11111.0,10000,0.030183,1659.477659

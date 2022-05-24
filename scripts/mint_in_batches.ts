@@ -8,28 +8,35 @@ const createCsvWriter = require("csv-writer").createObjectCsvWriter;
 const csvWriter = createCsvWriter({
   path: "report.csv",
   header: [
-    { id: "date", title: "Date" },
-    { id: "price", title: "Price" },
+    { id: "supply", title: "Supply" },
+    { id: "amount", title: "Amount" },
+    { id: "price", title: "Unit Price" },
+    { id: "totalPrice", title: "Total Price" },
   ],
 });
 
 const factoryAddress = "0x41C659319885598d77CF5bd8E792A5162bC72A04";
 const mintParams = {
-  creator: "0x2F556C07a1d1f6a14a6C95A406da459D4Fc607bf",
+  creator: "0x7D1D444A016FaFB601C27bC1bE4678D9D7871E86",
   usdcCollateral: "0x63aF7615e795F2cFb8A2f93aFAd7CD1B4d35bA5c",
   usdtCollateral: "0xb34Ca2cDE88dE520E4Be8b1ccEc374D3052ae021",
   slope: ethers.utils.parseEther(SLOPE).toString(),
   maxSupply: ethers.utils.parseEther("10000000").toString(),
-  name: "test_artist_8",
+  name: "test_artist_32",
   symbol: "TESTARTIST",
 };
 
 let token = "";
 let signers: any;
-const prices: { date: Date; price: string }[] = [];
+const prices: {
+  supply: string;
+  amount: number;
+  price: string;
+  totalPrice: string;
+}[] = [];
 
 async function createSocialToken() {
-  const whiteAddress = "0x2F556C07a1d1f6a14a6C95A406da459D4Fc607bf";
+  const whiteAddress = "0x7D1D444A016FaFB601C27bC1bE4678D9D7871E86";
   signers = await ethers.getSigners();
 
   const [owner] = await ethers.getSigners();
@@ -54,12 +61,13 @@ async function createSocialToken() {
   return token;
 }
 
+let initialAmount = 1;
+
 async function mintInBatch(max: number) {
   await createSocialToken();
   console.info("token", token);
   const owner = signers[0];
-  const amount = ethers.utils.parseEther("1000").toString();
-  console.info("amount", amount);
+
   const socialToken = await ethers.getContractAt("SocialToken", token, owner);
 
   const usdcContract = await ethers.getContractAt(
@@ -70,11 +78,16 @@ async function mintInBatch(max: number) {
 
   let i = 0;
   while (i < max) {
+    const amountOne = ethers.utils.parseEther("1").toString();
+    const priceOne = await socialToken.getMintPrice(amountOne);
+    const priceOneInUsdc = ethers.utils.formatUnits(priceOne, 6);
+
+    const amount = ethers.utils.parseEther(initialAmount + "").toString();
     const price = await socialToken.getMintPrice(amount);
     console.info("price", price);
     const priceInUsdc = ethers.utils.formatUnits(price, 6);
     console.info("priceInUsdc", priceInUsdc);
-    prices.push({ date: new Date(), price: priceInUsdc });
+
     await (
       await usdcContract.approve(
         token,
@@ -83,10 +96,22 @@ async function mintInBatch(max: number) {
     ).wait();
 
     const socialTokenMinter = socialToken.connect(owner);
-    const mint = await (
+
+    await (
       await socialTokenMinter.mint(amount, mintParams.usdcCollateral)
     ).wait();
 
+    let supply: any = await socialTokenMinter.totalSupply();
+    supply = ethers.utils.formatEther(supply);
+
+    prices.push({
+      supply,
+      price: priceOneInUsdc,
+      amount: initialAmount,
+      totalPrice: priceInUsdc,
+    });
+
+    initialAmount = initialAmount * 10;
     i++;
   }
 
@@ -99,7 +124,7 @@ async function mintInBatch(max: number) {
     });
 }
 
-mintInBatch(15)
+mintInBatch(5)
   .then(async () => {
     console.log("Successfully minted");
   })
