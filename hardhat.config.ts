@@ -14,9 +14,9 @@ const config: HardhatUserConfig = {
   networks: {
     hardhat: {
       forking: {
-        url: "<API KEY>",
+        url: "https://eth-mainnet.alchemyapi.io/v2/6crZyzd6pmy54K5s1A8uCmWQP-Z7I7BC",
         blockNumber: 12400000,
-      },
+      }, 
     },
     // matic: {
     //   url: "https://matic-mumbai.chainstacklabs.com",
@@ -28,7 +28,7 @@ const config: HardhatUserConfig = {
     // },
   // },
   rinkeby: {
-    url: "https://rinkeby.infura.io/v3/6c355ab4385549299505dc40e02951f1",
+    url: "https://rinkeby.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161",
     accounts: [
      process.env.DEV_PRIVATE_KEY as string,
     //  process.env.DEV_PRIVATE_KEY2 as string,
