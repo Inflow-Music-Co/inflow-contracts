@@ -3,6 +3,10 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "lib": ["es5", "es6"],
+    "baseUrl": ".",
+    "paths": {
+      "@constants/*": ["constants/*"]
+    },
     "module": "commonjs",
     "moduleResolution": "node",
     "noImplicitAny": true,

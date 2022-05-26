@@ -4,6 +4,7 @@ import "@typechain/hardhat";
 import "solidity-coverage";
 import "hardhat-gas-reporter";
 import "@nomiclabs/hardhat-etherscan";
+
 import { HardhatUserConfig } from "hardhat/config";
 require("dotenv").config();
 require('hardhat-abi-exporter');
@@ -28,10 +29,17 @@ const config: HardhatUserConfig = {
   // },
   rinkeby: {
     url: "https://rinkeby.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161",
-    accounts: [process.env.DEV_PRIVATE_KEY as string],
-    gas: 3000000,
-    gasPrice: 8000000000,
-  },
+    accounts: [
+     process.env.DEV_PRIVATE_KEY as string,
+    //  process.env.DEV_PRIVATE_KEY2 as string,
+    //  process.env.DEV_PRIVATE_KEY3 as string,
+    //  process.env.DEV_PRIVATE_KEY4 as string,
+    //  process.env.DEV_PRIVATE_KEY5 as string,
+    //  process.env.DEV_PRIVATE_KEY6 as string,
+     ],
+     gas: 3000000,
+     gasPrice: 8000000000
+   },
 },
   solidity: {
     compilers: [
