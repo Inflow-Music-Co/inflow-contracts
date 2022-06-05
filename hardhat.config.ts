@@ -4,20 +4,13 @@ import "@typechain/hardhat";
 import "solidity-coverage";
 import "hardhat-gas-reporter";
 import "@nomiclabs/hardhat-etherscan";
-
 import { HardhatUserConfig } from "hardhat/config";
 require("dotenv").config();
 require('hardhat-abi-exporter');
-​
+
 const config: HardhatUserConfig = {
   defaultNetwork: "rinkeby",
   networks: {
-    hardhat: {
-      forking: {
-        url: "https://eth-mainnet.alchemyapi.io/v2/6crZyzd6pmy54K5s1A8uCmWQP-Z7I7BC",
-        blockNumber: 12400000,
-      }, 
-    },
     // matic: {
     //   url: "https://matic-mumbai.chainstacklabs.com",
     //   accounts: [`${process.env.DEV_PRIVATE_KEY}`]
@@ -28,15 +21,8 @@ const config: HardhatUserConfig = {
     // },
   // },
   rinkeby: {
-    url: "https://rinkeby.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161",
-    accounts: [
-     process.env.DEV_PRIVATE_KEY as string,
-    //  process.env.DEV_PRIVATE_KEY2 as string,
-    //  process.env.DEV_PRIVATE_KEY3 as string,
-    //  process.env.DEV_PRIVATE_KEY4 as string,
-    //  process.env.DEV_PRIVATE_KEY5 as string,
-    //  process.env.DEV_PRIVATE_KEY6 as string,
-     ],
+    url: `https://rinkeby.infura.io/v3/${process.env.ALCHEMY_API_KEY}`,
+    accounts: [`0x${process.env.DEV_PRIVATE_KEY}`],
      gas: 3000000,
      gasPrice: 8000000000
    },

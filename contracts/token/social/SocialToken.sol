@@ -2,6 +2,7 @@
 pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -17,6 +18,8 @@ contract SocialToken is ISocialToken, Ownable, ERC20, ReentrancyGuard {
 
     /// @dev Creator's address
     address public creator;
+    /// @dev Admin address
+    address public admin;
     /// @dev Collateral token
     IERC20 public usdcCollateral;
     /// @dev second Collateral token
@@ -36,6 +39,64 @@ contract SocialToken is ISocialToken, Ownable, ERC20, ReentrancyGuard {
         maxSupply = data.maxSupply;
     }
 
+    //////////////////////////////
+    /// PUBLIC PRICE FUNCTIONS ///
+    //////////////////////////////
+
+    /// @dev Calculate collateral price to mint
+    /// @param amount (uint256): Amount of social tokens to mint
+    /// @return (uint256): Collateral required to mint social token amount
+    function getMintPrice(uint256 amount)
+        public
+        view
+        override
+        returns (uint256)
+    {
+        uint256 supply = totalSupply();
+        uint256 newSupply = supply + amount;
+        uint256 _reserve = reserve;
+        return
+            supply == 0
+                ? (slope * amount * amount) / 2 / 1e48
+                : (((_reserve * newSupply * newSupply) / (supply * supply)) - _reserve);
+    }
+
+    /// @dev Calculate collateral received on burn
+    /// @param amount (uint256): Amount of social tokens to burn
+    /// @return (uint256): Collateral received if input social token amount is burned
+    function getBurnPrice(uint256 amount)
+        public
+        view
+        override
+        returns (uint256)
+    {
+        uint256 supply = totalSupply();
+        require(supply > 0, "SocialToken: supply is zero");
+        require(amount <= supply, "SocialToken: amount greater than supply");
+        uint256 newSupply = supply - amount;
+        uint256 _reserve = reserve;
+        return
+            _reserve - ((_reserve * newSupply * newSupply) / (supply * supply));
+    }
+
+    /// @dev Calculate creator's fee
+    /// @param fee (uint256): Total fee from which to calculate creator's fee
+    /// @return (uint256): Creator's fee
+    function getCreatorFee(uint256 fee) public pure override returns (uint256) {
+        return (fee * 8) / 10;
+    }
+    ////////////////////////////////
+    /// EXTERNAL ADMIN FUNCTIONS ///
+    ////////////////////////////////
+
+    /// @dev Withdraw earned funds from minting fees
+    /// @notice Cannot withdraw the reserve funds
+    function withdraw() internal onlyOwner nonReentrant {
+        IERC20 _collateral = usdcCollateral;
+        uint256 withdrawableFunds = _collateral.balanceOf(address(this)) - reserve;
+        _collateral.safeTransfer(admin, withdrawableFunds);
+    }
+
     ////////////////////////////////
     /// EXTERNAL TOKEN FUNCTIONS ///
     ////////////////////////////////
@@ -52,7 +113,7 @@ contract SocialToken is ISocialToken, Ownable, ERC20, ReentrancyGuard {
         require(mintPrice > 0, "SocialToken: amount too low");
         uint256 supply = totalSupply();
         require(supply + amount <= maxSupply, "SocialToken: amount too large");
-        uint256 fee = (getMintPriceBySocialToken * 15) / 100;
+        uint256 fee = (getMintPrice * 15) / 100;
         uint256 creatorFee = getCreatorFee(fee);
         reserve += mintPrice - fee;
         _mint(msg.sender, amount);
@@ -63,8 +124,7 @@ contract SocialToken is ISocialToken, Ownable, ERC20, ReentrancyGuard {
         }
         _collateral.safeTransferFrom(msg.sender, address(this), mintPrice);
         _collateral.safeTransfer(creator, creatorFee);
-        _collateral.safeTransfer(owner(), fee - creatorFee);
-
+        withdraw();
         emit Minted(
             msg.sender,
             address(this),
@@ -106,85 +166,11 @@ contract SocialToken is ISocialToken, Ownable, ERC20, ReentrancyGuard {
         );
     }
 
-    ////////////////////////////////
-    /// EXTERNAL ADMIN FUNCTIONS ///
-    ////////////////////////////////
-
-    /// @dev Withdraw earned funds from minting fees
-    /// @notice Cannot withdraw the reserve funds
-    function withdraw() external override onlyOwner nonReentrant {
-        IERC20 _collateral = usdcCollateral;
-        uint256 withdrawableFunds = _collateral.balanceOf(address(this)) -
-            reserve;
-        _collateral.safeTransfer(msg.sender, withdrawableFunds);
-    }
-
     /// @dev update creator address
     /// @notice Cannot set zero address
-    function updateCreator(address _creator) external override onlyOwner {
+    function updateCreator(address _creator) external override onlyOwner nonReentrant {
         require(address(0) != _creator, "Invalid address");
         creator = _creator;
-    }
-
-    //////////////////////////////
-    /// PUBLIC PRICE FUNCTIONS ///
-    //////////////////////////////
-
-    /// @dev Calculate collateral price to mint
-    /// @param amount (uint256): Amount of social tokens to mint
-    /// @return (uint256): Collateral required to mint social token amount
-    function getMintPriceBySocialToken(uint256 amount)
-        public
-        view
-        override
-        returns (uint256)
-    {
-        uint256 supply = totalSupply();
-        uint256 newSupply = supply + amount;
-        uint256 _reserve = reserve;
-        return
-            supply == 0
-                ? (slope * amount * amount) / 2 / 1e48
-                : (((_reserve * newSupply * newSupply) / (supply * supply)) - _reserve);
-    }
-
-    function getMintPriceByCollateral(uint256 amount) 
-        public
-        view
-        override
-        return (uint256)
-    {
-        uint256 supply = totalSupply();
-        uint256 _reserve = reserve;
-        return
-            supply == 0
-                ? (slope * amount * amount) / 2 / 1e48
-                : (((_reserve * supply * supply) / (supply * supply)) - _reserve);
-
-    }
-
-    /// @dev Calculate collateral received on burn
-    /// @param amount (uint256): Amount of social tokens to burn
-    /// @return (uint256): Collateral received if input social token amount is burned
-    function getBurnPrice(uint256 amount)
-        public
-        view
-        override
-        returns (uint256)
-    {
-        uint256 supply = totalSupply();
-        require(supply > 0, "SocialToken: supply is zero");
-        require(amount <= supply, "SocialToken: amount greater than supply");
-        uint256 newSupply = supply - amount;
-        uint256 _reserve = reserve;
-        return
-            _reserve - ((_reserve * newSupply * newSupply) / (supply * supply));
-    }
-
-    /// @dev Calculate creator's fee
-    /// @param fee (uint256): Total fee from which to calculate creator's fee
-    /// @return (uint256): Creator's fee
-    function getCreatorFee(uint256 fee) public pure override returns (uint256) {
-        return (fee * 8) / 10;
+        transferOwnership(_creator);
     }
 }

@@ -33,16 +33,10 @@ interface ISocialToken is IERC20 {
     );
 
     function mint(uint256, address) external;
-
     function burn(uint256) external;
-
-    function withdraw() external;
-
+    function withdraw() internal;
     function updateCreator(address) external;
-
     function getMintPrice(uint256) external view returns (uint256);
-
     function getBurnPrice(uint256) external view returns (uint256);
-
     function getCreatorFee(uint256) external pure returns (uint256);
 }
