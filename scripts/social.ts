@@ -17,9 +17,9 @@ async function getSocialToken(contractAddress: string, userAddress: string) {
 }
 
 getSocialToken(
-    "0x0075c7aaa1D50857Dd5d293590d105f378A6f5Ff",
-    "0xf591cA90dA60B9532631A612b1951c9C9a506565"
-  )
+  "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+  "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
+)
   .then(async (res) => {
     console.log("Token address is", res);
   })

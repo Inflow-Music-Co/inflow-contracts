@@ -12,14 +12,16 @@ const csvWriter = createCsvWriter({
     { id: "amount", title: "Amount" },
     { id: "price", title: "Unit Price" },
     { id: "totalPrice", title: "Total Price" },
+    { id: "artistFee", title: "Artist Fee" },
+    { id: "platformFee", title: "Platform Fee" },
   ],
 });
 
-const factoryAddress = "0x41C659319885598d77CF5bd8E792A5162bC72A04";
+const factoryAddress = "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9";
 const mintParams = {
-  creator: "0x4FB14Ade0Bd8D8bF9C41ec648A20D4b3C43EB78c",
-  usdcCollateral: "0x63aF7615e795F2cFb8A2f93aFAd7CD1B4d35bA5c",
-  usdtCollateral: "0xb34Ca2cDE88dE520E4Be8b1ccEc374D3052ae021",
+  creator: "0x70997970c51812dc3a010c7d01b50e0d17dc79c8",
+  usdcCollateral: "0x5FC8d32690cc91D4c39d9d3abcBD16989F875707",
+  usdtCollateral: "0x0165878A594ca255338adfa4d48449f69242Eb8F",
   slope: ethers.utils.parseEther(SLOPE).toString(),
   maxSupply: ethers.utils.parseEther("10000000").toString(),
   name: "test_artist_41",
@@ -33,10 +35,12 @@ const prices: {
   amount: number;
   price: string;
   totalPrice: string;
+  artistFee: number;
+  platformFee: number;
 }[] = [];
 
 async function createSocialToken() {
-  const whiteAddress = "0x4FB14Ade0Bd8D8bF9C41ec648A20D4b3C43EB78c";
+  const whiteAddress = "0x70997970c51812dc3a010c7d01b50e0d17dc79c8";
   signers = await ethers.getSigners();
 
   const [owner] = await ethers.getSigners();
@@ -61,7 +65,7 @@ async function createSocialToken() {
   return token;
 }
 
-let initialAmount = 10;
+let initialAmount = 1000;
 let remainingSupply = 10000000;
 
 async function mintInBatch(max: number) {
@@ -78,7 +82,7 @@ async function mintInBatch(max: number) {
   );
 
   let i = 0;
-  while (i < max && remainingSupply > 0) {
+  while (remainingSupply > 0) {
     if (initialAmount > remainingSupply) initialAmount = remainingSupply;
 
     const amountOne = ethers.utils.parseEther("1").toString();
@@ -116,9 +120,11 @@ async function mintInBatch(max: number) {
       price: priceOneInUsdc,
       amount: initialAmount,
       totalPrice: priceInUsdc,
+      artistFee: +priceInUsdc * 0.15,
+      platformFee: +priceInUsdc * 0.05,
     });
 
-    initialAmount = initialAmount * 10;
+    initialAmount = initialAmount + 100;
     i++;
   }
 
