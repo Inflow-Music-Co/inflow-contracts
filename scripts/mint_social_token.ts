@@ -1,6 +1,6 @@
 import { ethers } from "hardhat";
 
-const tokenAddress = "0x2FFc139D8Dc7e8228d904c04cbFaDe6923eaef7b";
+const tokenAddress = "0x0075c7aaa1D50857Dd5d293590d105f378A6f5Ff";
 const MockUSDC = "0x63aF7615e795F2cFb8A2f93aFAd7CD1B4d35bA5c";
 
 // mint social token
