@@ -17,7 +17,7 @@ const csvWriter = createCsvWriter({
   ],
 });
 
-const factoryAddress = "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9";
+const factoryAddress = "0x0075c7aaa1D50857Dd5d293590d105f378A6f5Ff";
 const mintParams = {
   creator: "0x70997970c51812dc3a010c7d01b50e0d17dc79c8",
   usdcCollateral: "0x5FC8d32690cc91D4c39d9d3abcBD16989F875707",
@@ -28,7 +28,7 @@ const mintParams = {
   symbol: "TESTARTIST",
 };
 
-let token = "";
+let token = "0x343B81a96a178CECC492d5A942962Ca032151A96";
 let signers: any;
 const prices: {
   supply: string;
@@ -39,57 +39,42 @@ const prices: {
   platformFee: number;
 }[] = [];
 
-async function createSocialToken() {
-  const whiteAddress = "0x70997970c51812dc3a010c7d01b50e0d17dc79c8";
-  signers = await ethers.getSigners();
-
-  const [owner] = await ethers.getSigners();
-  const factory = await ethers.getContractAt(
-    "SocialTokenFactory",
-    factoryAddress,
-    owner
-  );
-  const SocialTokenFactory = factory.connect(owner);
-  const whitelist = await (
-    await SocialTokenFactory.whitelist(whiteAddress)
-  ).wait();
-  console.log("whitelist", whitelist);
-
-  const socialTokenCreator = factory.connect(owner);
-  const create = await (await socialTokenCreator.create(mintParams)).wait();
-  console.log("create", create);
-
-  const socialTokenContract = factory.connect(owner);
-  token = await socialTokenContract.getToken(whiteAddress);
-
-  return token;
-}
-
 let initialAmount = 1000;
 let remainingSupply = 10000000;
 
 async function mintInBatch(max: number) {
-  await createSocialToken();
+  signers = await ethers.getSigners();
+  console.log({signers})
+
   console.info("token", token);
   const owner = signers[0];
+  console.info({ owner });
 
   const socialToken = await ethers.getContractAt("SocialToken", token, owner);
+  console.info({ socialToken });
 
   const usdcContract = await ethers.getContractAt(
     "MockUSDC",
     mintParams.usdcCollateral,
     owner
   );
+  console.info({ usdcContract });
 
   let i = 0;
   while (remainingSupply > 0) {
     if (initialAmount > remainingSupply) initialAmount = remainingSupply;
+    console.info({ remainingSupply });
 
     const amountOne = ethers.utils.parseEther("1").toString();
+    console.log('1')
     const priceOne = await socialToken.getMintPrice(amountOne);
+    console.log('2')
     const priceOneInUsdc = ethers.utils.formatUnits(priceOne, 6);
+    console.log('3')
 
     const amount = ethers.utils.parseEther(initialAmount + "").toString();
+    console.log('4')
+
     const price = await socialToken.getMintPrice(amount);
     console.info("price", price);
     const priceInUsdc = ethers.utils.formatUnits(price, 6);

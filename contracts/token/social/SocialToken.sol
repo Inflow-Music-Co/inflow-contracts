@@ -52,7 +52,7 @@ contract SocialToken is ISocialToken, Ownable, ERC20, ReentrancyGuard {
         require(mintPrice > 0, "SocialToken: amount too low");
         uint256 supply = totalSupply();
         require(supply + amount <= maxSupply, "SocialToken: amount too large");
-        uint256 fee = (getMintPriceBySocialToken * 15) / 100;
+        uint256 fee = (mintPrice * 15) / 100;
         uint256 creatorFee = getCreatorFee(fee);
         reserve += mintPrice - fee;
         _mint(msg.sender, amount);
@@ -133,7 +133,7 @@ contract SocialToken is ISocialToken, Ownable, ERC20, ReentrancyGuard {
     /// @dev Calculate collateral price to mint
     /// @param amount (uint256): Amount of social tokens to mint
     /// @return (uint256): Collateral required to mint social token amount
-    function getMintPriceBySocialToken(uint256 amount)
+    function getMintPrice(uint256 amount)
         public
         view
         override
@@ -145,22 +145,8 @@ contract SocialToken is ISocialToken, Ownable, ERC20, ReentrancyGuard {
         return
             supply == 0
                 ? (slope * amount * amount) / 2 / 1e48
-                : (((_reserve * newSupply * newSupply) / (supply * supply)) - _reserve);
-    }
-
-    function getMintPriceByCollateral(uint256 amount) 
-        public
-        view
-        override
-        return (uint256)
-    {
-        uint256 supply = totalSupply();
-        uint256 _reserve = reserve;
-        return
-            supply == 0
-                ? (slope * amount * amount) / 2 / 1e48
-                : (((_reserve * supply * supply) / (supply * supply)) - _reserve);
-
+                : (((_reserve * newSupply * newSupply) / (supply * supply)) -
+                    _reserve);
     }
 
     /// @dev Calculate collateral received on burn

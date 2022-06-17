@@ -7,16 +7,33 @@ import "@nomiclabs/hardhat-etherscan";
 
 import { HardhatUserConfig } from "hardhat/config";
 require("dotenv").config();
-require('hardhat-abi-exporter');
-​
+require("hardhat-abi-exporter");
 const config: HardhatUserConfig = {
   defaultNetwork: "rinkeby",
+  // defaultNetwork: "hardhat",
   networks: {
+    // hardhat: {
+    //   forking: {
+    //     url: "https://eth-mainnet.alchemyapi.io/v2/6crZyzd6pmy54K5s1A8uCmWQP-Z7I7BC",
+    //     blockNumber: 12400000,
+    //   },
+    // },
+    /**Run hardhat network:
+     * npx hardhat node 
+     * ex: npx hardhat run --network localhost scripts/deploy.ts
+     */
     hardhat: {
       forking: {
-        url: "https://eth-mainnet.alchemyapi.io/v2/6crZyzd6pmy54K5s1A8uCmWQP-Z7I7BC",
-        blockNumber: 12400000,
-      }, 
+        url: "http://127.0.0.1:8545/",
+      },
+      accounts: [
+        {
+          privateKey: "70f7987fe6d17bbe2772de71cb20a5dbdfb49e30e0bdd1fc277b8ff4457252a1",
+          balance: "10000",
+        },
+      ],
+      gas: 3000000,
+      gasPrice: 8000000000,
     },
     // matic: {
     //   url: "https://matic-mumbai.chainstacklabs.com",
@@ -26,21 +43,21 @@ const config: HardhatUserConfig = {
     //   url: "https://rpc-mumbai.maticvigil.com",
     //   // accounts: [process.env.DEV_PRIVATE_KEY as string],
     // },
-  // },
-  rinkeby: {
-    url: "https://rinkeby.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161",
-    accounts: [
-     process.env.DEV_PRIVATE_KEY as string,
-    //  process.env.DEV_PRIVATE_KEY2 as string,
-    //  process.env.DEV_PRIVATE_KEY3 as string,
-    //  process.env.DEV_PRIVATE_KEY4 as string,
-    //  process.env.DEV_PRIVATE_KEY5 as string,
-    //  process.env.DEV_PRIVATE_KEY6 as string,
-     ],
-     gas: 3000000,
-     gasPrice: 8000000000
-   },
-},
+    // },
+    rinkeby: {
+      url: "https://rinkeby.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161",
+      accounts: [
+        process.env.DEV_PRIVATE_KEY as string,
+        //  process.env.DEV_PRIVATE_KEY2 as string,
+        //  process.env.DEV_PRIVATE_KEY3 as string,
+        //  process.env.DEV_PRIVATE_KEY4 as string,
+        //  process.env.DEV_PRIVATE_KEY5 as string,
+        //  process.env.DEV_PRIVATE_KEY6 as string,
+      ],
+      gas: 3000000,
+      gasPrice: 8000000000,
+    },
+  },
   solidity: {
     compilers: [
       {
@@ -73,7 +90,5 @@ const config: HardhatUserConfig = {
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY,
   },
-  
 };
-​
 export default config;
