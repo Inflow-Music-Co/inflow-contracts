@@ -44,8 +44,14 @@ const config: HardhatUserConfig = {
     //   // accounts: [process.env.DEV_PRIVATE_KEY as string],
     // },
     // },
+    mainnet : {
+      url: `https://eth-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`,
+      accounts: [
+        process.env.DEV_PRIVATE_KEY as string,
+      ]
+    },
     rinkeby: {
-      url: "https://rinkeby.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161",
+      url: `https://rinkeby.infura.io/v3/${process.env.INFURA_API_KEY}`,
       accounts: [
         process.env.DEV_PRIVATE_KEY as string,
         //  process.env.DEV_PRIVATE_KEY2 as string,

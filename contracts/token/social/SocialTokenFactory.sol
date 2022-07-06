@@ -43,7 +43,7 @@ contract SocialTokenFactory is Whitelistable {
     }(data);
     socialTokenAddress = address(socialToken);
     _tokens[data.creator] = socialTokenAddress;
-    socialToken.transferOwnership(0x16808B32761e4C3FC68D2Ceae2f9B54bf59326cC);
+    socialToken.transferOwnership(0x4f24E47a94873F4DF3830cD22f7f393Df90BCC4E);
     emit SocialTokenCreated(socialTokenAddress, data.creator);
   }
 
