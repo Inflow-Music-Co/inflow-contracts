@@ -1,7 +1,7 @@
 import { ethers } from "hardhat";
 
-const tokenAddress = "0x0075c7aaa1D50857Dd5d293590d105f378A6f5Ff";
-const MockUSDC = "0x63aF7615e795F2cFb8A2f93aFAd7CD1B4d35bA5c";
+const tokenAddress = "0xBEBCEe0dE6cb7b153D0937F9f1259d73063C022C";
+const MockUSDC = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
 
 // mint social token
 async function mintSocialToken(amount: string): Promise<void> {
@@ -20,4 +20,4 @@ async function mintSocialToken(amount: string): Promise<void> {
   console.log("mint", mint);
 }
 
-mintSocialToken("10");
+mintSocialToken("10.0");

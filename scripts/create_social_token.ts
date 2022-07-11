@@ -2,15 +2,15 @@ import { ethers } from "hardhat";
 
 import { SLOPE } from "../constants";
 
-const factoryAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+const factoryAddress = "0xBA7cE2ECB379695fC221F14893ff9274F77651aD";
 const mintParams = {
-  creator: "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
-  usdcCollateral: "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
-  usdtCollateral: "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9",
+  creator: "0xdB0EBbA81aF56aFf92637fEAC7f5832376fEa50B",
+  usdcCollateral: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+  usdtCollateral: "0xdAC17F958D2ee523a2206206994597C13D831ec7",
   slope: ethers.utils.parseEther(SLOPE).toString(),
   maxSupply: ethers.utils.parseEther("10000000").toString(),
-  name: "luke_test_3",
-  symbol: "LUKETEST3",
+  name: "charo-knight",
+  symbol: "FLF",
 };
 
 async function createSocialToken(): Promise<void> {
