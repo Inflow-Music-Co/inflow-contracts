@@ -51,11 +51,11 @@ yarn typechain
 
 ### Deployments 
 ```
-Mainnet: 
+Mainnet
 SocialTokenFactory: 0xBA7cE2ECB379695fC221F14893ff9274F77651aD
 ```
 ```
-Rinkeby:
+Rinkeby
 MockUSDC Minter : 0x63aF7615e795F2cFb8A2f93aFAd7CD1B4d35bA5c
 SocialTokenFactory : 0x0075c7aaa1D50857Dd5d293590d105f378A6f5Ff
 RExample Artist wallet Address : 0x1362133CC1c49f4dEcddCAE3e8fBD7b72F17106f (use for getToken)
@@ -70,4 +70,8 @@ Rinkeby 0x16808b32761e4c3fc68d2ceae2f9b54bf59326cc
 
 ```sh
 yarn mint
+```
+### Mainnet Social Tokens
+```
+$FLF : 0xBEBCEe0dE6cb7b153D0937F9f1259d73063C022C
 ```
