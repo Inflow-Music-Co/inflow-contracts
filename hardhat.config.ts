@@ -11,8 +11,8 @@ import { HardhatUserConfig } from "hardhat/config";
 require("dotenv").config();
 require("hardhat-abi-exporter");
 const config: HardhatUserConfig = {
-  defaultNetwork: "rinkeby",
-  // defaultNetwork: "hardhat",
+  // defaultNetwork: "rinkeby",
+  defaultNetwork: "hardhat",
   networks: {
     // hardhat: {
     //   forking: {

@@ -21,13 +21,13 @@ async function getSocialTokenDetails(
 }
 
 task("socialTokenDetails", "Get Social Token Details")
-  .addPositionalParam("tokenAddress")
+  .addParam("tokenAddress", "Token Address")
   .setAction(async ({ tokenAddress }, hre) => {
     console.info({ tokenAddress });
     await getSocialTokenDetails(tokenAddress, hre.ethers);
   });
 
-  /**
-   * Command to run task:
-   * npx hardhat socialTokenDetails TokenAddress
-   */
+/**
+ * Command to run task:
+ * npx hardhat socialTokenDetails --token-address `tokenAddress`
+ */

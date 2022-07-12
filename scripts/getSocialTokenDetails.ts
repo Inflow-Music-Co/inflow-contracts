@@ -1,6 +1,6 @@
 import { ethers } from "hardhat";
 
-const tokenAddress = "0x2FFc139D8Dc7e8228d904c04cbFaDe6923eaef7b";
+const tokenAddress = "0xBEBCEe0dE6cb7b153D0937F9f1259d73063C022C";
 
 // mint social token
 async function getSocialTokenDetails(): Promise<void> {
