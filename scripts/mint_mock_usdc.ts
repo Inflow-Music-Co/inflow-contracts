@@ -1,6 +1,8 @@
 import { ethers } from "hardhat";
 
-const MockUSDC = "0x5FC8d32690cc91D4c39d9d3abcBD16989F875707";
+import { USDC_ADDRESS } from "../constants";
+
+const MockUSDC = USDC_ADDRESS;
 
 //mint 10 to the power of digits of usdc
 async function mintMockUSD(digits: number): Promise<void> {

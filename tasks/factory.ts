@@ -12,27 +12,15 @@ async function deploy(): Promise<void> {
   console.log(`${contractName} deployed at: ${contract.address}`);
 }
 
-deploy()
-  .then(() => process.exit(0))
-  .catch((err) => {
-    console.error(err);
-    process.exit(1);
-  });
-
-task("factory", "Deploy Factory").setAction(
-  async (_, hre) => {
-    ethers = hre.ethers;
-    deploy()
-      .then(() => {
-        console.info("Factory deployed");
-      })
-      .catch((err) => {
-        console.error(err);
-      });
-  }
-);
+task("factory", "Deploy Factory").setAction(async (_, hre) => {
+  ethers = hre.ethers;
+  console.info('running task "factory"');
+  await deploy();
+  console.info('finished task "factory"');
+  console.info('Next task is "social"');
+});
 
 /**
  * Command to run task:
- * npx hardhat factory --token-address <tokenAddress>
+ * npx hardhat factory --network <network>
  */

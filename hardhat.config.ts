@@ -6,6 +6,10 @@ import "hardhat-gas-reporter";
 import "@nomiclabs/hardhat-etherscan";
 
 import "./tasks/getSocialTokenDetails";
+import "./tasks/factory";
+import "./tasks/social";
+import "./tasks/mint"
+import "./tasks/burn"
 
 import { HardhatUserConfig } from "hardhat/config";
 require("dotenv").config();
@@ -30,7 +34,7 @@ const config: HardhatUserConfig = {
       },
       accounts: [
         {
-          privateKey: process.env.DEV_PRIVATE_KEY as string,
+          privateKey: process.env.DEV_PRIVATE_KEY_LOCALHOST as string,
           balance: "10000",
         },
       ],
