@@ -52,7 +52,7 @@ yarn typechain
 ### Deployments 
 ```
 Mainnet
-SocialTokenFactory: 0xBA7cE2ECB379695fC221F14893ff9274F77651aD
+SocialTokenFactory: 0x29b8f7dBeb92248Aa8d909Ce214D495741d64c87
 ```
 ```
 Rinkeby
@@ -73,5 +73,5 @@ yarn mint
 ```
 ### Mainnet Social Tokens
 ```
-$FLF : 0xBEBCEe0dE6cb7b153D0937F9f1259d73063C022C
+
 ```
