@@ -16,9 +16,9 @@ async function createSocialToken(mintParams: any) {
     owner
   );
   const SocialTokenFactory = factory.connect(owner);
-  await (await SocialTokenFactory.whitelist(whiteAddress)).wait();
+  //await (await SocialTokenFactory.whitelist(whiteAddress)).wait();
 
-  console.log("whitelist done");
+  //console.log("whitelist done");
 
   const socialTokenCreator = factory.connect(owner);
   const create = await (await socialTokenCreator.create(mintParams)).wait();

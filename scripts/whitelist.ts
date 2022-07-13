@@ -1,7 +1,7 @@
 import { ethers } from "hardhat";
 
 // fill addresses
-const factoryAddress = "0xBA7cE2ECB379695fC221F14893ff9274F77651aD";
+const factoryAddress = "0x29b8f7dBeb92248Aa8d909Ce214D495741d64c87";
 const whiteAddress = "0x4f24E47a94873F4DF3830cD22f7f393Df90BCC4E";
 
 async function whitelist(whiteAddress: string): Promise<void> {
