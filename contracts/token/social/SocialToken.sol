@@ -52,7 +52,7 @@ contract SocialToken is ISocialToken, Ownable, ERC20, ReentrancyGuard {
         require(mintPrice > 0, "SocialToken: amount too low");
         uint256 supply = totalSupply();
         require(supply + amount <= maxSupply, "SocialToken: amount too large");
-        uint256 fee = (mintPrice * 20) / 100;
+        uint256 fee = (mintPrice * 30) / 100;
         uint256 creatorFee = getCreatorFee(fee);
         reserve += mintPrice - fee;
         _mint(msg.sender, amount);
@@ -171,6 +171,6 @@ contract SocialToken is ISocialToken, Ownable, ERC20, ReentrancyGuard {
     /// @param fee (uint256): Total fee from which to calculate creator's fee
     /// @return (uint256): Creator's fee
     function getCreatorFee(uint256 fee) public pure override returns (uint256) {
-        return (fee * 6) / 10;
+        return (fee * 66) / 100;
     }
 }
