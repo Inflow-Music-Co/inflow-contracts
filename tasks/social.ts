@@ -7,7 +7,7 @@ let ethers: any;
 let factoryAddress = "";
 
 async function createSocialToken(mintParams: any) {
-  const whiteAddress = mintParams.creator;
+  const whiteAddress = mintParams.creator; // this is wrong the admin should be whitlisted not creator(artist)
 
   const [owner] = await ethers.getSigners();
   const factory = await ethers.getContractAt(
