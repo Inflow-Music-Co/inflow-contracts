@@ -73,5 +73,5 @@ yarn mint
 ```
 ### Mainnet Social Tokens
 ```
-
+$FLF : 0xF61D510C8cF4218D98E674f0bE0b0FD38e2a1C3a  'charo knight'
 ```
