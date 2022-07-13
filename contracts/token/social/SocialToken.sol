@@ -27,8 +27,6 @@ contract SocialToken is ISocialToken, Ownable, ERC20, ReentrancyGuard {
     uint256 public maxSupply;
     /// @dev Funds reserved for burns
     uint256 public reserve;
-    /// @dev Token Symbol 
-    string public symbol;
 
     constructor(CreateData memory data) ERC20(data.name, data.symbol) {
         creator = data.creator;
@@ -36,7 +34,6 @@ contract SocialToken is ISocialToken, Ownable, ERC20, ReentrancyGuard {
         usdtCollateral = IERC20(data.usdtCollateral);
         slope = data.slope;
         maxSupply = data.maxSupply;
-        symbol = data.symbol;
     }
 
     ////////////////////////////////

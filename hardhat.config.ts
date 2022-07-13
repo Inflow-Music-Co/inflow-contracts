@@ -5,12 +5,18 @@ import "solidity-coverage";
 import "hardhat-gas-reporter";
 import "@nomiclabs/hardhat-etherscan";
 
+import "./tasks/getSocialTokenDetails";
+import "./tasks/factory";
+import "./tasks/social";
+import "./tasks/mint"
+import "./tasks/burn"
+
 import { HardhatUserConfig } from "hardhat/config";
 require("dotenv").config();
 require("hardhat-abi-exporter");
 const config: HardhatUserConfig = {
-  defaultNetwork: "rinkeby",
-  // defaultNetwork: "hardhat",
+  // defaultNetwork: "rinkeby",
+  defaultNetwork: "hardhat",
   networks: {
     // hardhat: {
     //   forking: {
@@ -19,7 +25,7 @@ const config: HardhatUserConfig = {
     //   },
     // },
     /**Run hardhat network:
-     * npx hardhat node 
+     * npx hardhat node
      * ex: npx hardhat run --network localhost scripts/deploy.ts
      */
     hardhat: {
@@ -28,7 +34,7 @@ const config: HardhatUserConfig = {
       },
       accounts: [
         {
-          privateKey: "70f7987fe6d17bbe2772de71cb20a5dbdfb49e30e0bdd1fc277b8ff4457252a1",
+          privateKey: process.env.DEV_PRIVATE_KEY_LOCALHOST as string,
           balance: "10000",
         },
       ],
@@ -44,11 +50,9 @@ const config: HardhatUserConfig = {
     //   // accounts: [process.env.DEV_PRIVATE_KEY as string],
     // },
     // },
-    mainnet : {
+    mainnet: {
       url: `https://eth-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`,
-      accounts: [
-        process.env.DEV_PRIVATE_KEY as string,
-      ]
+      accounts: [process.env.DEV_PRIVATE_KEY as string],
     },
     rinkeby: {
       url: `https://rinkeby.infura.io/v3/${process.env.INFURA_API_KEY}`,
