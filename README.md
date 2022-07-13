@@ -48,6 +48,11 @@ yarn test
 ```sh
 yarn typechain
 ```
+### Mint MockUSDC
+
+```sh
+yarn mint
+```
 
 ### Deployments 
 ```
@@ -61,11 +66,7 @@ SocialTokenFactory : 0x0075c7aaa1D50857Dd5d293590d105f378A6f5Ff
 RExample Artist wallet Address : 0x1362133CC1c49f4dEcddCAE3e8fBD7b72F17106f (use for getToken)
 ```
 
-### Mint MockUSDC
 
-```sh
-yarn mint
-```
 ### Mainnet Social Tokens
 ```
 $FLF : 0xF61D510C8cF4218D98E674f0bE0b0FD38e2a1C3a  'charo knight'
