@@ -16,9 +16,9 @@ async function createSocialToken(mintParams: any) {
     owner
   );
   const SocialTokenFactory = factory.connect(owner);
-  //await (await SocialTokenFactory.whitelist(whiteAddress)).wait();
+  await (await SocialTokenFactory.whitelist(whiteAddress)).wait();
 
-  //console.log("whitelist done");
+  console.log("whitelist done");
 
   const socialTokenCreator = factory.connect(owner);
   const create = await (await socialTokenCreator.create(mintParams)).wait();
@@ -58,5 +58,5 @@ task("social", "Create social token")
  * Command to run task:
  * npx hardhat social --factory-address <factory> --creator <creator> --token-name <name> --token-symbol <symbol> --network <network>
  * Example:
- * npx hardhat social --factory-address 0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9 --creator 0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266 --token-name test --token-symbol TST --network localhost
+ * npx hardhat social --factory-address 0xb2ab9754BADf43A46A0E2e13Ee370886eCCC3ABE --creator 0x16808B32761e4C3FC68D2Ceae2f9B54bf59326cC --token-name testArtist --token-symbol TNT --network rinkeby
  */
