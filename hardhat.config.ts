@@ -8,14 +8,14 @@ import "@nomiclabs/hardhat-etherscan";
 import "./tasks/getSocialTokenDetails";
 import "./tasks/factory";
 import "./tasks/social";
-import "./tasks/mint"
-import "./tasks/burn"
+import "./tasks/mint";
+import "./tasks/burn";
 
 import { HardhatUserConfig } from "hardhat/config";
 require("dotenv").config();
 require("hardhat-abi-exporter");
 const config: HardhatUserConfig = {
-  // defaultNetwork: "rinkeby",
+  // defaultNetwork: "goerli",
   defaultNetwork: "hardhat",
   networks: {
     // hardhat: {
@@ -58,11 +58,22 @@ const config: HardhatUserConfig = {
       url: `https://rinkeby.infura.io/v3/${process.env.INFURA_API_KEY}`,
       accounts: [
         process.env.DEV_PRIVATE_KEY as string,
-        //  process.env.DEV_PRIVATE_KEY2 as string,
-        //  process.env.DEV_PRIVATE_KEY3 as string,
-        //  process.env.DEV_PRIVATE_KEY4 as string,
-        //  process.env.DEV_PRIVATE_KEY5 as string,
-        //  process.env.DEV_PRIVATE_KEY6 as string,
+      ],
+      gas: 3000000,
+      gasPrice: 8000000000,
+    },
+    goerli: {
+      url: `https://goerli.infura.io/v3/${process.env.INFURA_API_KEY}`,
+      accounts: [
+        process.env.DEV_PRIVATE_KEY as string,
+      ],
+      gas: 3000000,
+      gasPrice: 8000000000,
+    },
+    sepolia: {
+      url: `https://sepolia.infura.io/v3/${process.env.INFURA_API_KEY}`,
+      accounts: [
+        process.env.DEV_PRIVATE_KEY as string,
       ],
       gas: 3000000,
       gasPrice: 8000000000,
