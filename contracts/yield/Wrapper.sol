@@ -23,7 +23,7 @@ import {
 import {ShareMath} from "./ShareMath.sol";
 import {TOKEN} from "./Token.sol";
 
-contract RibbonVault is
+contract Wrapper is
     ReentrancyGuardUpgradeable,
     OwnableUpgradeable,
     ERC20Upgradeable
@@ -72,11 +72,9 @@ contract RibbonVault is
     /// @notice Yearn vault contract
     IYearnVault public collateralToken;
 
-    // Gap is left to avoid storage collisions. Though RibbonVault is not upgradeable, we add this as a safety measure.
     uint256[30] private ____gap;
 
     // *IMPORTANT* NO NEW STORAGE VARIABLES SHOULD BE ADDED HERE
-    // This is to prevent storage collisions. All storage variables should be appended to RibbonThetaYearnVaultStorage
     // https://docs.openzeppelin.com/upgrades-plugins/1.x/writing-upgradeable#modifying-your-contracts
 
     /************************************************
@@ -110,7 +108,6 @@ contract RibbonVault is
     address public immutable MARGIN_POOL;
 
     // SWAP_CONTRACT is a contract for settling bids via signed messages
-    // https://github.com/ribbon-finance/ribbon-v2/blob/master/contracts/utils/Swap.sol
     address public immutable SWAP_CONTRACT;
 
     /************************************************
@@ -155,14 +152,12 @@ contract RibbonVault is
     constructor(
         address _token1,
         address _token2,
-        address _vault,
     ) {
         require(_token1!= address(0), "!_token1");
         require(_token2!= address(0), "!_token2");
 
         TOKEN1 = _token1;
         TOKEN2 = _token2;
-        VAULT = _vault;
     }
 
     /**
